@@ -77,9 +77,14 @@ public class PaginaWeb {
         return """
             <!DOCTYPE html>
             <html>
+
             <head>
+
                 <meta charset='UTF-8'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+
+                <meta name='viewport'
+                      content='width=device-width, initial-scale=1.0'>
+
                 <title>Servidor UMG</title>
 
                 <style>
@@ -188,7 +193,7 @@ public class PaginaWeb {
                         }
 
                         .menu {
-                            width: 100%;
+                            width: 100%%;
                             padding: 15px;
                         }
 
@@ -210,7 +215,7 @@ public class PaginaWeb {
                         }
 
                         .principal {
-                            width: 100%;
+                            width: 100%%;
                             padding: 20px;
                         }
 
@@ -236,7 +241,7 @@ public class PaginaWeb {
                         }
 
                         .card {
-                            width: 100%;
+                            width: 100%%;
                             padding: 18px;
                         }
                     }
@@ -278,6 +283,7 @@ public class PaginaWeb {
                     }
 
                 </style>
+
             </head>
 
             <body>
@@ -329,6 +335,7 @@ public class PaginaWeb {
                 </div>
 
             </body>
+
             </html>
             """.formatted(contenido);
     }
