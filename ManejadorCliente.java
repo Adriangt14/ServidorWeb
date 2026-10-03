@@ -1,8 +1,9 @@
-import java.net.Socket;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.IOException;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class ManejadorCliente {
 
@@ -50,63 +51,45 @@ public class ManejadorCliente {
                     "[" + nombreHilo + "] Ruta solicitada: " + ruta
                 );
 
-                if (
+                boolean paginaValida =
                     ruta.equals("/") ||
+                    ruta.equals("/productos") ||
                     ruta.equals("/solicitudes") ||
                     ruta.equals("/hilos") ||
-                    ruta.equals("/clientes")
-                ) {
+                    ruta.equals("/clientes") ||
+                    esProductoValido(ruta);
+
+                if (paginaValida) {
+
+                    if (ruta.startsWith("/producto/")) {
+                        System.out.println(
+                            "[" + nombreHilo + "] Producto solicitado: "
+                            + ruta.substring("/producto/".length())
+                        );
+                    }
 
                     String pagina = PaginaWeb.generar(
                         ruta,
                         nombreHilo
                     );
 
-                    salida.println("HTTP/1.1 200 OK");
-                    salida.println(
-                        "Content-Type: text/html; charset=UTF-8"
-                    );
-                    salida.println(
-                        "Content-Length: " +
-                        pagina.getBytes().length
-                    );
-                    salida.println("Connection: close");
-                    salida.println();
-
-                    salida.println(pagina);
+                    enviarRespuesta(salida, "HTTP/1.1 200 OK", pagina);
 
                 } else {
 
-                    salida.println(
-                        "HTTP/1.1 404 Not Found"
+                    System.out.println(
+                        "[" + nombreHilo + "] 404: " + ruta
                     );
 
-                    salida.println(
-                        "Content-Type: text/html; charset=UTF-8"
+                    String pagina404 = PaginaWeb.error404(
+                        ruta,
+                        nombreHilo
                     );
 
-                    salida.println(
-                        "Connection: close"
-                    );
-
-                    salida.println();
-
-                    salida.println(
-                        "<html><body>"
-                    );
-
-                    salida.println(
-                        "<h2>404 - Página no encontrada</h2>"
-                    );
-
-                    salida.println(
-                        "<p>Ruta solicitada: " +
-                        ruta +
-                        "</p>"
-                    );
-
-                    salida.println(
-                        "</body></html>"
+                    enviarRespuesta(
+                        salida,
+                        "HTTP/1.1 404 Not Found",
+                        pagina404
                     );
                 }
             }
@@ -124,5 +107,38 @@ public class ManejadorCliente {
                 + e.getMessage()
             );
         }
+    }
+
+    private static boolean esProductoValido(String ruta) {
+
+        if (!ruta.startsWith("/producto/")) {
+            return false;
+        }
+
+        String id = ruta.substring("/producto/".length());
+
+        return id.equals("1") ||
+               id.equals("2") ||
+               id.equals("3") ||
+               id.equals("4") ||
+               id.equals("5") ||
+               id.equals("6") ||
+               id.equals("7");
+    }
+
+    private static void enviarRespuesta(
+        PrintWriter salida,
+        String estado,
+        String pagina
+    ) {
+
+        int longitud = pagina.getBytes(StandardCharsets.UTF_8).length;
+
+        salida.println(estado);
+        salida.println("Content-Type: text/html; charset=UTF-8");
+        salida.println("Content-Length: " + longitud);
+        salida.println("Connection: close");
+        salida.println();
+        salida.println(pagina);
     }
 }
