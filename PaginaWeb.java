@@ -4,7 +4,109 @@ public class PaginaWeb {
 
         String contenido;
 
-        if (pagina.equals("/solicitudes")) {
+        if (pagina.equals("/productos")) {
+
+            contenido = """
+                <h1>Productos</h1>
+                <p class='subtitulo'>Explora nuestro catálogo de tecnología.</p>
+
+                <div class='productos'>
+
+                    <div class='producto'>
+                        <div class='icono'>L</div>
+                        <h3>Laptop Pro</h3>
+                        <p>Alto rendimiento para trabajo y estudio.</p>
+                        <strong>Q4,500</strong>
+                        <a href='/comprar/productos/1'>Comprar</a>
+                    </div>
+
+                    <div class='producto'>
+                        <div class='icono'>H</div>
+                        <h3>Headphones X</h3>
+                        <p>Audio inalámbrico para todos los días.</p>
+                        <strong>Q350</strong>
+                        <a href='/comprar/productos/2'>Comprar</a>
+                    </div>
+
+                    <div class='producto'>
+                        <div class='icono'>K</div>
+                        <h3>Keyboard Pro</h3>
+                        <p>Teclado mecánico para productividad.</p>
+                        <strong>Q450</strong>
+                        <a href='/comprar/productos/3'>Comprar</a>
+                    </div>
+
+                    <div class='producto'>
+                        <div class='icono'>M</div>
+                        <h3>Mouse Pro</h3>
+                        <p>Mouse preciso para trabajo y gaming.</p>
+                        <strong>Q250</strong>
+                        <a href='/comprar/productos/4'>Comprar</a>
+                    </div>
+
+                    <div class='producto'>
+                        <div class='icono'>D</div>
+                        <h3>Monitor 24"</h3>
+                        <p>Pantalla Full HD para escritorio.</p>
+                        <strong>Q1,200</strong>
+                        <a href='/comprar/productos/5'>Comprar</a>
+                    </div>
+
+                    <div class='producto'>
+                        <div class='icono'>G</div>
+                        <h3>Gamepad X</h3>
+                        <p>Control inalámbrico para videojuegos.</p>
+                        <strong>Q500</strong>
+                        <a href='/comprar/productos/6'>Comprar</a>
+                    </div>
+
+                    <div class='producto'>
+                        <div class='icono'>S</div>
+                        <h3>SSD 1TB</h3>
+                        <p>Almacenamiento rápido para tu equipo.</p>
+                        <strong>Q750</strong>
+                        <a href='/comprar/productos/7'>Comprar</a>
+                    </div>
+
+                </div>
+                """;
+
+        } else if (pagina.startsWith("/comprar/")) {
+
+            String[] partes = pagina.split("/");
+            String origen = partes.length > 2 ? partes[2] : "productos";
+            String producto = partes.length > 3 ? partes[3] : "1";
+
+            String nombre = switch (producto) {
+                case "1" -> "Laptop Pro";
+                case "2" -> "Headphones X";
+                case "3" -> "Keyboard Pro";
+                case "4" -> "Mouse Pro";
+                case "5" -> "Monitor 24\"";
+                case "6" -> "Gamepad X";
+                case "7" -> "SSD 1TB";
+                default -> "Producto";
+            };
+
+            String lugar = origen.equals("dashboard") ? "Dashboard" : "Productos";
+
+            contenido = """
+                <div class='hero'>
+                    <span class='etiqueta'>SOLICITUD PROCESADA</span>
+                    <h1>Compra recibida</h1>
+                    <p>La solicitud fue recibida correctamente por el servidor.</p>
+
+                    <div class='compra'>
+                        <p><b>Producto:</b> %s</p>
+                        <p><b>Origen:</b> %s → Producto %s</p>
+                        <p><b>Hilo:</b> %s</p>
+                    </div>
+
+                    <a class='boton' href='/productos'>Volver a productos</a>
+                </div>
+                """.formatted(nombre, lugar, producto, hilo);
+
+        } else if (pagina.equals("/solicitudes")) {
 
             contenido = """
                 <h1>Solicitudes HTTP</h1>
@@ -87,12 +189,13 @@ public class PaginaWeb {
                 <h2>Productos destacados</h2>
 
                 <div class='productos'>
+
                     <div class='producto'>
                         <div class='icono'>L</div>
                         <h3>Laptop Pro</h3>
                         <p>Alto rendimiento para trabajo y estudio.</p>
                         <strong>Q4,500</strong>
-                        <a href='/comprar/1'>Comprar</a>
+                        <a href='/comprar/dashboard/1'>Comprar</a>
                     </div>
 
                     <div class='producto'>
@@ -100,7 +203,7 @@ public class PaginaWeb {
                         <h3>Headphones X</h3>
                         <p>Audio inalámbrico para todos los días.</p>
                         <strong>Q350</strong>
-                        <a href='/comprar/2'>Comprar</a>
+                        <a href='/comprar/dashboard/2'>Comprar</a>
                     </div>
 
                     <div class='producto'>
@@ -108,8 +211,9 @@ public class PaginaWeb {
                         <h3>Keyboard Pro</h3>
                         <p>Teclado mecánico para productividad.</p>
                         <strong>Q450</strong>
-                        <a href='/comprar/3'>Comprar</a>
+                        <a href='/comprar/dashboard/3'>Comprar</a>
                     </div>
+
                 </div>
                 """.formatted(hilo);
         }
@@ -221,7 +325,7 @@ public class PaginaWeb {
                     }
 
                     .hero p {
-                        max-width: 600px;
+                        max-width: 650px;
                         line-height: 1.6;
                     }
 
@@ -264,10 +368,6 @@ public class PaginaWeb {
                         margin: 10px 0 5px;
                     }
 
-                    .producto {
-                        transition: transform 0.15s;
-                    }
-
                     .producto:hover {
                         transform: translateY(-3px);
                     }
@@ -292,6 +392,18 @@ public class PaginaWeb {
                         border-radius: 8px;
                         font-weight: bold;
                         font-size: 18px;
+                    }
+
+                    .compra {
+                        background: #f5f6f8;
+                        border-radius: 8px;
+                        padding: 15px 20px;
+                        margin-top: 25px;
+                        max-width: 600px;
+                    }
+
+                    .compra p {
+                        margin: 8px 0;
                     }
 
                     @media (max-width: 800px) {
@@ -352,11 +464,7 @@ public class PaginaWeb {
                         <div class='logo'>NEXUS / UMG</div>
 
                         <h4>Servidor</h4>
-
                         <a href='/'>Dashboard</a>
-                        <a href='/solicitudes'>Solicitudes</a>
-                        <a href='/hilos'>Hilos</a>
-                        <a href='/clientes'>Clientes</a>
 
                         <h4 style='margin-top:25px;'>Tienda</h4>
                         <a href='/productos'>Productos</a>
