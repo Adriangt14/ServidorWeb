@@ -1,0 +1,8 @@
+*.class
+.vscode/
+nbproject/private/
+build/
+dist/
+.nb-gradle/
+.DS_Store
+Thumbs.db
