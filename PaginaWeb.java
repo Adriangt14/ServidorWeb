@@ -104,11 +104,12 @@ public class PaginaWeb {
                     <span class='etiqueta'>PRODUCTO %s</span>
                     <h1>%s</h1>
                     <div class='precio'>%s</div>
-                    <p>Solicitud procesada por el servidor.</p>
+
                     <div class='datos'>
                         <p><b>Ruta:</b> /producto/%s</p>
                         <p><b>Hilo:</b> %s</p>
                     </div>
+
                     <a class='boton' href='/productos'>Volver a productos</a>
                 </div>
                 """.formatted(id, nombre, precio, id, hilo);
@@ -120,11 +121,20 @@ public class PaginaWeb {
                     <span class='etiqueta'>SERVIDOR</span>
                     <h1>Solicitudes HTTP</h1>
                     <p>GET /solicitudes</p>
+
                     <div class='datos'>
-                        <p><b>Hilo:</b> %s</p>
+                        <p><b>Recibidas:</b> %s</p>
+                        <p><b>Procesadas:</b> %s</p>
+                        <p><b>En proceso:</b> %s</p>
+                        <p><b>En cola:</b> %s</p>
                     </div>
                 </div>
-                """.formatted(hilo);
+                """.formatted(
+                    Estadisticas.getRecibidas(),
+                    Estadisticas.getProcesadas(),
+                    Estadisticas.getActivas(),
+                    Estadisticas.getEnCola()
+                );
 
         } else if (pagina.equals("/hilos")) {
 
@@ -132,12 +142,17 @@ public class PaginaWeb {
                 <div class='detalle'>
                     <span class='etiqueta'>SERVIDOR</span>
                     <h1>Thread Pool</h1>
+
                     <div class='datos'>
                         <p><b>Hilos configurados:</b> 10</p>
+                        <p><b>Hilos activos:</b> %s</p>
                         <p><b>Hilo actual:</b> %s</p>
                     </div>
                 </div>
-                """.formatted(hilo);
+                """.formatted(
+                    Estadisticas.getActivas(),
+                    hilo
+                );
 
         } else if (pagina.equals("/clientes")) {
 
@@ -145,11 +160,14 @@ public class PaginaWeb {
                 <div class='detalle'>
                     <span class='etiqueta'>SERVIDOR</span>
                     <h1>Clientes</h1>
+
                     <div class='datos'>
-                        <p>Servidor preparado para recibir conexiones.</p>
+                        <p><b>Conexiones activas:</b> %s</p>
                     </div>
                 </div>
-                """;
+                """.formatted(
+                    Estadisticas.getActivas()
+                );
 
         } else {
 
@@ -164,6 +182,7 @@ public class PaginaWeb {
                 <h2>Estado del servidor</h2>
 
                 <div class='cards'>
+
                     <div class='card'>
                         <span class='etiqueta'>ESTADO</span>
                         <h3 class='online'>● ONLINE</h3>
@@ -175,13 +194,51 @@ public class PaginaWeb {
                     </div>
 
                     <div class='card'>
-                        <span class='etiqueta'>SOLICITUD</span>
-                        <h3>GET /</h3>
-                        <p>%s</p>
+                        <span class='etiqueta'>HILO ACTUAL</span>
+                        <h3>%s</h3>
                     </div>
+
+                </div>
+
+                <h2>Actividad</h2>
+
+                <div class='cards'>
+
+                    <div class='card'>
+                        <span class='etiqueta'>SOLICITUDES</span>
+                        <h3>%s</h3>
+                        <p>Recibidas</p>
+                    </div>
+
+                    <div class='card'>
+                        <span class='etiqueta'>PROCESADAS</span>
+                        <h3>%s</h3>
+                        <p>Completadas</p>
+                    </div>
+
+                    <div class='card'>
+                        <span class='etiqueta'>EN COLA</span>
+                        <h3>%s</h3>
+                        <p>Esperando un hilo</p>
+                    </div>
+
+                </div>
+
+                <div class='card monitor'>
+
+                    <div class='seccion-titulo'>
+                        <h2>Cola de solicitudes</h2>
+                        <span>%s pendientes</span>
+                    </div>
+
+                    <div class='cola'>
+                        %s
+                    </div>
+
                 </div>
 
                 <div class='seccion'>
+
                     <div class='seccion-titulo'>
                         <h2>Destacados</h2>
                         <a href='/productos'>Ver todos</a>
@@ -212,7 +269,14 @@ public class PaginaWeb {
 
                     </div>
                 </div>
-                """.formatted(hilo);
+                """.formatted(
+                    hilo,
+                    Estadisticas.getRecibidas(),
+                    Estadisticas.getProcesadas(),
+                    Estadisticas.getEnCola(),
+                    Estadisticas.getEnCola(),
+                    Estadisticas.getColaHtml()
+                );
         }
 
         return plantilla(contenido);
@@ -226,10 +290,12 @@ public class PaginaWeb {
                 <div class='codigo'>404</div>
                 <h1>Página no encontrada</h1>
                 <p>La ruta solicitada no existe.</p>
+
                 <div class='datos'>
                     <p><b>Ruta:</b> %s</p>
                     <p><b>Hilo:</b> %s</p>
                 </div>
+
                 <a class='boton' href='/productos'>Volver a productos</a>
             </div>
             """.formatted(ruta, hilo);
@@ -242,13 +308,18 @@ public class PaginaWeb {
         return """
             <!DOCTYPE html>
             <html>
+
             <head>
                 <meta charset='UTF-8'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <meta name='viewport'
+                      content='width=device-width, initial-scale=1.0'>
+
                 <title>NEXUS | UMG</title>
 
                 <style>
-                    * { box-sizing: border-box; }
+                    * {
+                        box-sizing: border-box;
+                    }
 
                     body {
                         margin: 0;
@@ -346,10 +417,6 @@ public class PaginaWeb {
                         margin-bottom: 35px;
                     }
 
-                    .hero p {
-                        margin-bottom: 25px;
-                    }
-
                     .etiqueta {
                         color: #64748b;
                         font-size: 11px;
@@ -445,6 +512,10 @@ public class PaginaWeb {
                         background: #b91c1c;
                     }
 
+                    .error a:hover {
+                        background: #991b1b;
+                    }
+
                     .seccion {
                         margin-top: 38px;
                     }
@@ -462,6 +533,38 @@ public class PaginaWeb {
                     .seccion-titulo a {
                         color: #1d4ed8;
                         font-weight: bold;
+                    }
+
+                    .seccion-titulo span {
+                        color: #64748b;
+                        font-size: 14px;
+                    }
+
+                    .monitor {
+                        margin-top: 25px;
+                    }
+
+                    .cola {
+                        margin-top: 18px;
+                        border-top: 1px solid #e2e8f0;
+                    }
+
+                    .cola-item {
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 12px;
+                        padding: 12px 4px;
+                        border-bottom: 1px solid #e2e8f0;
+                        color: #334155;
+                    }
+
+                    .cola-item span {
+                        color: #94a3b8;
+                        font-size: 13px;
+                    }
+
+                    .vacio {
+                        color: #64748b;
                     }
 
                     .datos {
@@ -486,7 +589,6 @@ public class PaginaWeb {
                         color: #b91c1c;
                         font-size: 72px;
                         font-weight: bold;
-                        margin-top: 10px;
                     }
 
                     .error404 {
@@ -494,6 +596,7 @@ public class PaginaWeb {
                     }
 
                     @media (max-width: 800px) {
+
                         .contenedor {
                             flex-direction: column;
                         }
@@ -542,35 +645,48 @@ public class PaginaWeb {
                             padding: 28px;
                         }
 
-                        .codigo {
-                            font-size: 56px;
+                        .cola-item {
+                            align-items: flex-start;
+                            flex-direction: column;
                         }
                     }
                 </style>
             </head>
 
             <body>
+
                 <div class='contenedor'>
 
                     <aside class='menu'>
-                        <div class='logo'>NEXUS / UMG</div>
+
+                        <div class='logo'>
+                            NEXUS / UMG
+                        </div>
 
                         <h4>Servidor</h4>
                         <a href='/'>Dashboard</a>
 
                         <h4 style='margin-top:25px;'>Tienda</h4>
                         <a href='/productos'>Productos</a>
+
                     </aside>
 
                     <main class='principal'>
+
                         <div class='barra'>
                             <h2>Panel del servidor</h2>
-                            <span class='estado'>● SERVIDOR ONLINE</span>
+
+                            <span class='estado'>
+                                ● SERVIDOR ONLINE
+                            </span>
                         </div>
 
                         %s
+
                     </main>
+
                 </div>
+
             </body>
             </html>
             """.formatted(contenido);
