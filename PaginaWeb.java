@@ -7,77 +7,77 @@ public class PaginaWeb {
         if (pagina.equals("/productos")) {
 
             contenido = """
-                <h1>Productos</h1>
-                <p class='subtitulo'>Explora nuestro catálogo de tecnología.</p>
+                <div class='encabezado'>
+                    <span class='etiqueta'>CATÁLOGO</span>
+                    <h1>Productos</h1>
+                </div>
 
                 <div class='productos'>
 
                     <div class='producto'>
                         <div class='icono'>L</div>
                         <h3>Laptop Pro</h3>
-                        <p>Alto rendimiento para trabajo y estudio.</p>
                         <strong>Q4,500</strong>
-                        <a href='/comprar/productos/1'>Comprar</a>
+                        <a href='/producto/1'>Ver producto</a>
                     </div>
 
                     <div class='producto'>
                         <div class='icono'>H</div>
                         <h3>Headphones X</h3>
-                        <p>Audio inalámbrico para todos los días.</p>
                         <strong>Q350</strong>
-                        <a href='/comprar/productos/2'>Comprar</a>
+                        <a href='/producto/2'>Ver producto</a>
                     </div>
 
                     <div class='producto'>
                         <div class='icono'>K</div>
                         <h3>Keyboard Pro</h3>
-                        <p>Teclado mecánico para productividad.</p>
                         <strong>Q450</strong>
-                        <a href='/comprar/productos/3'>Comprar</a>
+                        <a href='/producto/3'>Ver producto</a>
                     </div>
 
                     <div class='producto'>
                         <div class='icono'>M</div>
                         <h3>Mouse Pro</h3>
-                        <p>Mouse preciso para trabajo y gaming.</p>
                         <strong>Q250</strong>
-                        <a href='/comprar/productos/4'>Comprar</a>
+                        <a href='/producto/4'>Ver producto</a>
                     </div>
 
                     <div class='producto'>
                         <div class='icono'>D</div>
                         <h3>Monitor 24"</h3>
-                        <p>Pantalla Full HD para escritorio.</p>
                         <strong>Q1,200</strong>
-                        <a href='/comprar/productos/5'>Comprar</a>
+                        <a href='/producto/5'>Ver producto</a>
                     </div>
 
                     <div class='producto'>
                         <div class='icono'>G</div>
                         <h3>Gamepad X</h3>
-                        <p>Control inalámbrico para videojuegos.</p>
                         <strong>Q500</strong>
-                        <a href='/comprar/productos/6'>Comprar</a>
+                        <a href='/producto/6'>Ver producto</a>
                     </div>
 
                     <div class='producto'>
                         <div class='icono'>S</div>
                         <h3>SSD 1TB</h3>
-                        <p>Almacenamiento rápido para tu equipo.</p>
                         <strong>Q750</strong>
-                        <a href='/comprar/productos/7'>Comprar</a>
+                        <a href='/producto/7'>Ver producto</a>
+                    </div>
+
+                    <div class='producto error'>
+                        <div class='icono'>!</div>
+                        <h3>Error 404</h3>
+                        <strong>Prueba</strong>
+                        <a href='/producto/error'>Abrir</a>
                     </div>
 
                 </div>
                 """;
 
-        } else if (pagina.startsWith("/comprar/")) {
+        } else if (pagina.startsWith("/producto/")) {
 
-            String[] partes = pagina.split("/");
-            String origen = partes.length > 2 ? partes[2] : "productos";
-            String producto = partes.length > 3 ? partes[3] : "1";
+            String id = pagina.substring("/producto/".length());
 
-            String nombre = switch (producto) {
+            String nombre = switch (id) {
                 case "1" -> "Laptop Pro";
                 case "2" -> "Headphones X";
                 case "3" -> "Keyboard Pro";
@@ -88,54 +88,53 @@ public class PaginaWeb {
                 default -> "Producto";
             };
 
-            String lugar = origen.equals("dashboard") ? "Dashboard" : "Productos";
+            String precio = switch (id) {
+                case "1" -> "Q4,500";
+                case "2" -> "Q350";
+                case "3" -> "Q450";
+                case "4" -> "Q250";
+                case "5" -> "Q1,200";
+                case "6" -> "Q500";
+                case "7" -> "Q750";
+                default -> "";
+            };
 
             contenido = """
-                <div class='hero'>
-                    <span class='etiqueta'>SOLICITUD PROCESADA</span>
-                    <h1>Compra recibida</h1>
-                    <p>La solicitud fue recibida correctamente por el servidor.</p>
-
-                    <div class='compra'>
-                        <p><b>Producto:</b> %s</p>
-                        <p><b>Origen:</b> %s → Producto %s</p>
+                <div class='detalle'>
+                    <span class='etiqueta'>PRODUCTO %s</span>
+                    <h1>%s</h1>
+                    <div class='precio'>%s</div>
+                    <p>Solicitud procesada por el servidor.</p>
+                    <div class='datos'>
+                        <p><b>Ruta:</b> /producto/%s</p>
                         <p><b>Hilo:</b> %s</p>
                     </div>
-
                     <a class='boton' href='/productos'>Volver a productos</a>
                 </div>
-                """.formatted(nombre, lugar, producto, hilo);
+                """.formatted(id, nombre, precio, id, hilo);
 
         } else if (pagina.equals("/solicitudes")) {
 
             contenido = """
-                <h1>Solicitudes HTTP</h1>
-                <p class='subtitulo'>Registro de las solicitudes recibidas por el servidor.</p>
-
-                <div class='card'>
-                    <span class='etiqueta'>SOLICITUD ACTUAL</span>
-                    <h3>GET /solicitudes</h3>
-                    <p>Atendida por: <b>%s</b></p>
+                <div class='detalle'>
+                    <span class='etiqueta'>SERVIDOR</span>
+                    <h1>Solicitudes HTTP</h1>
+                    <p>GET /solicitudes</p>
+                    <div class='datos'>
+                        <p><b>Hilo:</b> %s</p>
+                    </div>
                 </div>
                 """.formatted(hilo);
 
         } else if (pagina.equals("/hilos")) {
 
             contenido = """
-                <h1>Hilos</h1>
-                <p class='subtitulo'>Estado del Thread Pool utilizado por el servidor.</p>
-
-                <div class='cards'>
-                    <div class='card'>
-                        <span class='etiqueta'>THREAD POOL</span>
-                        <h2>10</h2>
-                        <p>Hilos configurados</p>
-                    </div>
-
-                    <div class='card'>
-                        <span class='etiqueta'>HILO ACTUAL</span>
-                        <h3>%s</h3>
-                        <p>Atendiendo esta solicitud</p>
+                <div class='detalle'>
+                    <span class='etiqueta'>SERVIDOR</span>
+                    <h1>Thread Pool</h1>
+                    <div class='datos'>
+                        <p><b>Hilos configurados:</b> 10</p>
+                        <p><b>Hilo actual:</b> %s</p>
                     </div>
                 </div>
                 """.formatted(hilo);
@@ -143,13 +142,12 @@ public class PaginaWeb {
         } else if (pagina.equals("/clientes")) {
 
             contenido = """
-                <h1>Clientes</h1>
-                <p class='subtitulo'>Información de los clientes conectados al servidor.</p>
-
-                <div class='card'>
-                    <span class='etiqueta'>ESTADO</span>
-                    <h3>Servidor preparado</h3>
-                    <p>El servidor puede recibir nuevas conexiones.</p>
+                <div class='detalle'>
+                    <span class='etiqueta'>SERVIDOR</span>
+                    <h1>Clientes</h1>
+                    <div class='datos'>
+                        <p>Servidor preparado para recibir conexiones.</p>
+                    </div>
                 </div>
                 """;
 
@@ -157,10 +155,9 @@ public class PaginaWeb {
 
             contenido = """
                 <div class='hero'>
-                    <span class='etiqueta'>SERVIDOR WEB CONCURRENTE</span>
+                    <span class='etiqueta'>NEXUS / UMG</span>
                     <h1>Servidor Concurrente</h1>
-                    <p>Una tienda tecnológica desarrollada para demostrar
-                       el funcionamiento de múltiples clientes y hilos.</p>
+                    <p>Panel principal del servidor web.</p>
                     <a class='boton' href='/productos'>Ver productos</a>
                 </div>
 
@@ -168,55 +165,79 @@ public class PaginaWeb {
 
                 <div class='cards'>
                     <div class='card'>
-                        <span class='etiqueta'>SERVIDOR</span>
+                        <span class='etiqueta'>ESTADO</span>
                         <h3 class='online'>● ONLINE</h3>
-                        <p>Funcionando correctamente</p>
                     </div>
 
                     <div class='card'>
                         <span class='etiqueta'>THREAD POOL</span>
                         <h3>10 hilos</h3>
-                        <p>Solicitudes procesadas</p>
                     </div>
 
                     <div class='card'>
                         <span class='etiqueta'>SOLICITUD</span>
                         <h3>GET /</h3>
-                        <p>Atendida por %s</p>
+                        <p>%s</p>
                     </div>
                 </div>
 
-                <h2>Productos destacados</h2>
-
-                <div class='productos'>
-
-                    <div class='producto'>
-                        <div class='icono'>L</div>
-                        <h3>Laptop Pro</h3>
-                        <p>Alto rendimiento para trabajo y estudio.</p>
-                        <strong>Q4,500</strong>
-                        <a href='/comprar/dashboard/1'>Comprar</a>
+                <div class='seccion'>
+                    <div class='seccion-titulo'>
+                        <h2>Destacados</h2>
+                        <a href='/productos'>Ver todos</a>
                     </div>
 
-                    <div class='producto'>
-                        <div class='icono'>H</div>
-                        <h3>Headphones X</h3>
-                        <p>Audio inalámbrico para todos los días.</p>
-                        <strong>Q350</strong>
-                        <a href='/comprar/dashboard/2'>Comprar</a>
-                    </div>
+                    <div class='productos'>
 
-                    <div class='producto'>
-                        <div class='icono'>K</div>
-                        <h3>Keyboard Pro</h3>
-                        <p>Teclado mecánico para productividad.</p>
-                        <strong>Q450</strong>
-                        <a href='/comprar/dashboard/3'>Comprar</a>
-                    </div>
+                        <div class='producto'>
+                            <div class='icono'>L</div>
+                            <h3>Laptop Pro</h3>
+                            <strong>Q4,500</strong>
+                            <a href='/producto/1'>Ver producto</a>
+                        </div>
 
+                        <div class='producto'>
+                            <div class='icono'>H</div>
+                            <h3>Headphones X</h3>
+                            <strong>Q350</strong>
+                            <a href='/producto/2'>Ver producto</a>
+                        </div>
+
+                        <div class='producto'>
+                            <div class='icono'>K</div>
+                            <h3>Keyboard Pro</h3>
+                            <strong>Q450</strong>
+                            <a href='/producto/3'>Ver producto</a>
+                        </div>
+
+                    </div>
                 </div>
                 """.formatted(hilo);
         }
+
+        return plantilla(contenido);
+    }
+
+    public static String error404(String ruta, String hilo) {
+
+        String contenido = """
+            <div class='detalle error404'>
+                <span class='etiqueta'>ERROR</span>
+                <div class='codigo'>404</div>
+                <h1>Página no encontrada</h1>
+                <p>La ruta solicitada no existe.</p>
+                <div class='datos'>
+                    <p><b>Ruta:</b> %s</p>
+                    <p><b>Hilo:</b> %s</p>
+                </div>
+                <a class='boton' href='/productos'>Volver a productos</a>
+            </div>
+            """.formatted(ruta, hilo);
+
+        return plantilla(contenido);
+    }
+
+    private static String plantilla(String contenido) {
 
         return """
             <!DOCTYPE html>
@@ -232,8 +253,8 @@ public class PaginaWeb {
                     body {
                         margin: 0;
                         font-family: Arial, sans-serif;
-                        background: #f5f6f8;
-                        color: #171717;
+                        background: #f4f6f8;
+                        color: #111827;
                     }
 
                     .contenedor {
@@ -243,7 +264,7 @@ public class PaginaWeb {
 
                     .menu {
                         width: 235px;
-                        background: #111827;
+                        background: #0f172a;
                         color: white;
                         padding: 28px 18px;
                     }
@@ -252,12 +273,12 @@ public class PaginaWeb {
                         font-size: 21px;
                         font-weight: bold;
                         padding: 8px;
-                        margin-bottom: 35px;
+                        margin-bottom: 40px;
                         letter-spacing: 1px;
                     }
 
                     .menu h4 {
-                        color: #9ca3af;
+                        color: #94a3b8;
                         font-size: 11px;
                         margin: 0 8px 10px;
                         text-transform: uppercase;
@@ -265,7 +286,7 @@ public class PaginaWeb {
 
                     .menu a {
                         display: block;
-                        color: #d1d5db;
+                        color: #cbd5e1;
                         text-decoration: none;
                         padding: 12px;
                         border-radius: 7px;
@@ -273,13 +294,13 @@ public class PaginaWeb {
                     }
 
                     .menu a:hover {
-                        background: #1f2937;
+                        background: #1e293b;
                         color: white;
                     }
 
                     .principal {
                         flex: 1;
-                        padding: 35px;
+                        padding: 34px;
                         max-width: 1250px;
                     }
 
@@ -287,7 +308,7 @@ public class PaginaWeb {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 35px;
+                        margin-bottom: 32px;
                     }
 
                     .barra h2 {
@@ -295,19 +316,16 @@ public class PaginaWeb {
                     }
 
                     h1 {
-                        font-size: 38px;
-                        margin: 8px 0;
+                        font-size: 40px;
+                        margin: 8px 0 16px;
                     }
 
                     h2 {
                         margin-top: 35px;
                     }
 
-                    .subtitulo,
-                    .hero p,
-                    .card p,
-                    .producto p {
-                        color: #6b7280;
+                    p {
+                        color: #64748b;
                     }
 
                     .estado,
@@ -316,35 +334,45 @@ public class PaginaWeb {
                         font-weight: bold;
                     }
 
-                    .hero {
+                    .hero,
+                    .detalle {
                         background: white;
-                        border: 1px solid #e5e7eb;
+                        border: 1px solid #e2e8f0;
                         border-radius: 12px;
                         padding: 40px;
+                    }
+
+                    .hero {
                         margin-bottom: 35px;
                     }
 
                     .hero p {
-                        max-width: 650px;
-                        line-height: 1.6;
+                        margin-bottom: 25px;
                     }
 
                     .etiqueta {
-                        color: #6b7280;
+                        color: #64748b;
                         font-size: 11px;
                         font-weight: bold;
                         letter-spacing: 1px;
                     }
 
                     .boton,
-                    .producto a {
+                    .producto a,
+                    .seccion-titulo a {
                         display: inline-block;
-                        background: #171717;
-                        color: white;
                         text-decoration: none;
-                        padding: 10px 15px;
                         border-radius: 6px;
-                        margin-top: 12px;
+                    }
+
+                    .boton {
+                        background: #1d4ed8;
+                        color: white;
+                        padding: 11px 16px;
+                    }
+
+                    .boton:hover {
+                        background: #1e40af;
                     }
 
                     .cards,
@@ -358,28 +386,41 @@ public class PaginaWeb {
                     .card,
                     .producto {
                         background: white;
-                        border: 1px solid #e5e7eb;
+                        border: 1px solid #e2e8f0;
                         border-radius: 10px;
-                        padding: 23px;
+                        padding: 22px;
                     }
 
-                    .card h2,
                     .card h3 {
-                        margin: 10px 0 5px;
+                        margin: 12px 0 0;
+                    }
+
+                    .card p {
+                        margin-bottom: 0;
                     }
 
                     .producto:hover {
-                        transform: translateY(-3px);
+                        border-color: #cbd5e1;
                     }
 
                     .producto h3 {
-                        margin-bottom: 8px;
+                        margin: 18px 0 8px;
                     }
 
                     .producto strong {
                         display: block;
                         font-size: 21px;
-                        margin-top: 18px;
+                        margin: 12px 0;
+                    }
+
+                    .producto a {
+                        background: #111827;
+                        color: white;
+                        padding: 9px 13px;
+                    }
+
+                    .producto a:hover {
+                        background: #334155;
                     }
 
                     .icono {
@@ -388,22 +429,68 @@ public class PaginaWeb {
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        background: #f0f1f3;
+                        background: #eef2f7;
                         border-radius: 8px;
                         font-weight: bold;
                         font-size: 18px;
+                        color: #334155;
                     }
 
-                    .compra {
-                        background: #f5f6f8;
+                    .error .icono {
+                        background: #fee2e2;
+                        color: #b91c1c;
+                    }
+
+                    .error a {
+                        background: #b91c1c;
+                    }
+
+                    .seccion {
+                        margin-top: 38px;
+                    }
+
+                    .seccion-titulo {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    .seccion-titulo h2 {
+                        margin: 0;
+                    }
+
+                    .seccion-titulo a {
+                        color: #1d4ed8;
+                        font-weight: bold;
+                    }
+
+                    .datos {
+                        background: #f8fafc;
                         border-radius: 8px;
-                        padding: 15px 20px;
-                        margin-top: 25px;
-                        max-width: 600px;
+                        padding: 14px 18px;
+                        margin: 24px 0;
+                        max-width: 650px;
                     }
 
-                    .compra p {
+                    .datos p {
                         margin: 8px 0;
+                    }
+
+                    .precio {
+                        font-size: 30px;
+                        font-weight: bold;
+                        margin: 15px 0;
+                    }
+
+                    .codigo {
+                        color: #b91c1c;
+                        font-size: 72px;
+                        font-weight: bold;
+                        margin-top: 10px;
+                    }
+
+                    .error404 {
+                        border-color: #fecaca;
                     }
 
                     @media (max-width: 800px) {
@@ -450,8 +537,13 @@ public class PaginaWeb {
                             font-size: 30px;
                         }
 
-                        .hero {
+                        .hero,
+                        .detalle {
                             padding: 28px;
+                        }
+
+                        .codigo {
+                            font-size: 56px;
                         }
                     }
                 </style>
