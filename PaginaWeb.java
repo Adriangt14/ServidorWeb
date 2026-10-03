@@ -79,6 +79,7 @@ public class PaginaWeb {
             <html>
             <head>
                 <meta charset='UTF-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
                 <title>Servidor UMG</title>
 
                 <style>
@@ -137,13 +138,19 @@ public class PaginaWeb {
                     .principal {
                         flex: 1;
                         padding: 30px;
+                        min-width: 0;
                     }
 
                     .barra {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
+                        gap: 20px;
                         margin-bottom: 30px;
+                    }
+
+                    .barra h2 {
+                        margin: 0;
                     }
 
                     .estado {
@@ -163,6 +170,7 @@ public class PaginaWeb {
                         padding: 20px;
                         margin-bottom: 20px;
                         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                        overflow-wrap: break-word;
                     }
 
                     .cards .card {
@@ -171,6 +179,102 @@ public class PaginaWeb {
 
                     .card h3 {
                         margin-top: 0;
+                    }
+
+                    @media (max-width: 768px) {
+
+                        .contenedor {
+                            flex-direction: column;
+                        }
+
+                        .menu {
+                            width: 100%;
+                            padding: 15px;
+                        }
+
+                        .logo {
+                            font-size: 20px;
+                            margin-bottom: 15px;
+                            text-align: center;
+                        }
+
+                        .menu h4 {
+                            display: none;
+                        }
+
+                        .menu a {
+                            display: inline-block;
+                            padding: 10px 12px;
+                            margin: 3px;
+                            font-size: 14px;
+                        }
+
+                        .principal {
+                            width: 100%;
+                            padding: 20px;
+                        }
+
+                        .barra {
+                            align-items: flex-start;
+                            flex-direction: column;
+                            gap: 10px;
+                            margin-bottom: 25px;
+                        }
+
+                        .barra h2 {
+                            font-size: 22px;
+                        }
+
+                        .principal h1 {
+                            font-size: 28px;
+                        }
+
+                        .cards {
+                            flex-direction: column;
+                            gap: 0;
+                            margin: 20px 0;
+                        }
+
+                        .card {
+                            width: 100%;
+                            padding: 18px;
+                        }
+                    }
+
+                    @media (max-width: 480px) {
+
+                        .menu {
+                            padding: 12px;
+                        }
+
+                        .logo {
+                            font-size: 19px;
+                        }
+
+                        .menu a {
+                            font-size: 13px;
+                            padding: 9px;
+                        }
+
+                        .principal {
+                            padding: 16px;
+                        }
+
+                        .principal h1 {
+                            font-size: 24px;
+                        }
+
+                        .barra h2 {
+                            font-size: 20px;
+                        }
+
+                        .estado {
+                            font-size: 14px;
+                        }
+
+                        .card {
+                            padding: 16px;
+                        }
                     }
 
                 </style>
