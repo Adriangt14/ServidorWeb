@@ -7,6 +7,9 @@ import java.nio.charset.StandardCharsets;
 
 public class ManejadorCliente {
 
+    private static final int TIMEOUT_LECTURA_MS = 5_000;
+    private static final int MAX_LINEA_HTTP = 4_096;
+
     public static void atender(
         Socket clienteSocket,
         String id
@@ -23,116 +26,126 @@ public class ManejadorCliente {
 
         Estadisticas.iniciarSolicitud(id);
 
-        System.out.println(
-            "[" + nombreHilo + "] "
-            + "Solicitud #" + id
-            + " iniciada"
-        );
-
         try {
+
+            clienteSocket.setSoTimeout(
+                TIMEOUT_LECTURA_MS
+            );
 
             BufferedReader entrada =
                 new BufferedReader(
                     new InputStreamReader(
-                        clienteSocket.getInputStream()
+                        clienteSocket.getInputStream(),
+                        StandardCharsets.UTF_8
                     )
                 );
 
             PrintWriter salida =
                 new PrintWriter(
                     clienteSocket.getOutputStream(),
-                    true
+                    true,
+                    StandardCharsets.UTF_8
                 );
 
             String peticion =
-                entrada.readLine();
+                leerLineaLimitada(
+                    entrada,
+                    MAX_LINEA_HTTP
+                );
 
-            System.out.println(
-                "[" + nombreHilo + "] Petición: "
-                + peticion
+            if (peticion == null || peticion.isBlank()) {
+                return;
+            }
+
+            if (!peticion.startsWith("GET ")) {
+
+                enviarRespuesta(
+                    salida,
+                    "HTTP/1.1 400 Bad Request",
+                    PaginaWeb.error404(
+                        "Solicitud no soportada",
+                        nombreHilo
+                    )
+                );
+
+                return;
+            }
+
+            String[] partes =
+                peticion.split(" ", 3);
+
+            if (partes.length < 2) {
+
+                enviarRespuesta(
+                    salida,
+                    "HTTP/1.1 400 Bad Request",
+                    PaginaWeb.error404(
+                        "Solicitud invalida",
+                        nombreHilo
+                    )
+                );
+
+                return;
+            }
+
+            ruta = partes[1];
+
+            Estadisticas.actualizarRuta(
+                id,
+                ruta
             );
 
-            if (peticion != null) {
+            boolean paginaValida =
+                ruta.equals("/") ||
+                ruta.equals("/productos") ||
+                ruta.equals("/solicitudes") ||
+                ruta.equals("/hilos") ||
+                ruta.equals("/clientes") ||
+                esProductoValido(ruta);
 
-                if (peticion.startsWith("GET ")) {
+            if (paginaValida) {
 
-                    String[] partes =
-                        peticion.split(" ");
+                String pagina =
+                    PaginaWeb.generar(
+                        ruta,
+                        nombreHilo
+                    );
 
-                    if (partes.length >= 2) {
-                        ruta = partes[1];
-                    }
-                }
-
-                Estadisticas.actualizarRuta(
-                    id,
-                    ruta
+                enviarRespuesta(
+                    salida,
+                    "HTTP/1.1 200 OK",
+                    pagina
                 );
 
-                System.out.println(
-                    "[" + nombreHilo + "] Ruta solicitada: "
-                    + ruta
+            } else {
+
+                String pagina404 =
+                    PaginaWeb.error404(
+                        ruta,
+                        nombreHilo
+                    );
+
+                enviarRespuesta(
+                    salida,
+                    "HTTP/1.1 404 Not Found",
+                    pagina404
                 );
-
-                boolean paginaValida =
-                    ruta.equals("/") ||
-                    ruta.equals("/productos") ||
-                    ruta.equals("/solicitudes") ||
-                    ruta.equals("/hilos") ||
-                    ruta.equals("/clientes") ||
-                    esProductoValido(ruta);
-
-                if (paginaValida) {
-
-                    if (ruta.startsWith("/producto/")) {
-
-                        System.out.println(
-                            "[" + nombreHilo + "] "
-                            + "Producto solicitado: "
-                            + ruta.substring(
-                                "/producto/".length()
-                            )
-                        );
-                    }
-
-                    String pagina =
-                        PaginaWeb.generar(
-                            ruta,
-                            nombreHilo
-                        );
-
-                    enviarRespuesta(
-                        salida,
-                        "HTTP/1.1 200 OK",
-                        pagina
-                    );
-
-                } else {
-
-                    System.out.println(
-                        "[" + nombreHilo + "] 404: "
-                        + ruta
-                    );
-
-                    String pagina404 =
-                        PaginaWeb.error404(
-                            ruta,
-                            nombreHilo
-                        );
-
-                    enviarRespuesta(
-                        salida,
-                        "HTTP/1.1 404 Not Found",
-                        pagina404
-                    );
-                }
             }
+
+        } catch (java.net.SocketTimeoutException e) {
+
+            System.err.println(
+                "[" + nombreHilo +
+                "] Timeout leyendo cliente: " +
+                ip
+            );
 
         } catch (IOException e) {
 
             System.err.println(
-                "[" + nombreHilo + "] Error atendiendo cliente: "
-                + e.getMessage()
+                "[" + nombreHilo +
+                "] Error atendiendo cliente: " +
+                e.getMessage()
             );
 
         } finally {
@@ -151,16 +164,50 @@ public class ManejadorCliente {
             } catch (IOException e) {
 
                 System.err.println(
-                    "Error cerrando conexión: "
-                    + e.getMessage()
+                    "Error cerrando conexión: " +
+                    e.getMessage()
+                );
+            }
+        }
+    }
+
+    private static String leerLineaLimitada(
+        BufferedReader entrada,
+        int maxLongitud
+    ) throws IOException {
+
+        StringBuilder linea =
+            new StringBuilder();
+
+        int caracter;
+
+        while ((caracter = entrada.read()) != -1) {
+
+            if (caracter == '\n') {
+                break;
+            }
+
+            if (caracter == '\r') {
+                continue;
+            }
+
+            if (linea.length() >= maxLongitud) {
+                throw new IOException(
+                    "Linea HTTP demasiado larga"
                 );
             }
 
-            System.out.println(
-                "[" + nombreHilo + "] "
-                + "Cliente desconectado"
-            );
+            linea.append((char) caracter);
         }
+
+        if (
+            caracter == -1 &&
+            linea.length() == 0
+        ) {
+            return null;
+        }
+
+        return linea.toString();
     }
 
     private static boolean esProductoValido(
