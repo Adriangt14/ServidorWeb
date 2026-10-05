@@ -4,10 +4,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Estadisticas {
 
-    private static final AtomicInteger recibidas = new AtomicInteger();
-    private static final AtomicInteger procesadas = new AtomicInteger();
-    private static final AtomicInteger activas = new AtomicInteger();
-    private static final AtomicInteger consecutivo = new AtomicInteger();
+    private static final AtomicInteger recibidas =
+        new AtomicInteger();
+
+    private static final AtomicInteger procesadas =
+        new AtomicInteger();
+
+    private static final AtomicInteger rechazadas =
+        new AtomicInteger();
+
+    private static final AtomicInteger activas =
+        new AtomicInteger();
+
+    private static final AtomicInteger consecutivo =
+        new AtomicInteger();
 
     private static final ConcurrentLinkedQueue<Solicitud> cola =
         new ConcurrentLinkedQueue<>();
@@ -15,25 +25,60 @@ public class Estadisticas {
     private static final ConcurrentHashMap<String, Solicitud> solicitudes =
         new ConcurrentHashMap<>();
 
+    /*
+     * Bajo carga pesada no queremos imprimir
+     * miles de lineas por segundo.
+     */
+    private static final boolean LOG_DETALLADO = false;
+
     public static String registrarSolicitud(String ip) {
 
-        String id = String.valueOf(
-            consecutivo.incrementAndGet()
-        );
+        String id =
+            String.valueOf(
+                consecutivo.incrementAndGet()
+            );
 
-        Solicitud solicitud = new Solicitud(id, ip);
+        Solicitud solicitud =
+            new Solicitud(id, ip);
 
         solicitudes.put(id, solicitud);
+
         cola.add(solicitud);
 
         recibidas.incrementAndGet();
 
-        System.out.println(
-            "[Solicitud #" + id + "] Encolada | Cola: "
-            + cola.size()
-        );
+        if (LOG_DETALLADO) {
+
+            System.out.println(
+                "[Solicitud #" + id +
+                "] Encolada | Cola: " +
+                cola.size()
+            );
+        }
 
         return id;
+    }
+
+    public static void rechazarSolicitud(
+        String id
+    ) {
+
+        Solicitud solicitud =
+            solicitudes.remove(id);
+
+        if (solicitud != null) {
+            cola.remove(solicitud);
+        }
+
+        rechazadas.incrementAndGet();
+
+        if (LOG_DETALLADO) {
+
+            System.out.println(
+                "[Solicitud #" + id +
+                "] Rechazada por cola llena"
+            );
+        }
     }
 
     public static void actualizarRuta(
@@ -41,16 +86,20 @@ public class Estadisticas {
         String ruta
     ) {
 
-        Solicitud solicitud = solicitudes.get(id);
+        Solicitud solicitud =
+            solicitudes.get(id);
 
         if (solicitud != null) {
             solicitud.ruta = ruta;
         }
     }
 
-    public static void iniciarSolicitud(String id) {
+    public static void iniciarSolicitud(
+        String id
+    ) {
 
-        Solicitud solicitud = solicitudes.get(id);
+        Solicitud solicitud =
+            solicitudes.get(id);
 
         if (solicitud != null) {
             cola.remove(solicitud);
@@ -58,10 +107,14 @@ public class Estadisticas {
 
         activas.incrementAndGet();
 
-        System.out.println(
-            "[Solicitud #" + id + "] Procesando | Cola: "
-            + cola.size()
-        );
+        if (LOG_DETALLADO) {
+
+            System.out.println(
+                "[Solicitud #" + id +
+                "] Procesando | Cola: " +
+                cola.size()
+            );
+        }
     }
 
     public static void finalizarSolicitud(
@@ -72,15 +125,22 @@ public class Estadisticas {
     ) {
 
         activas.decrementAndGet();
+
         procesadas.incrementAndGet();
 
         solicitudes.remove(id);
 
-        System.out.println(
-            "[Solicitud #" + id + "] Completada | "
-            + "Procesadas: " + procesadas.get()
-            + " | Cola: " + cola.size()
-        );
+        if (LOG_DETALLADO) {
+
+            System.out.println(
+                "[Solicitud #" + id +
+                "] Completada | " +
+                "Procesadas: " +
+                procesadas.get() +
+                " | Cola: " +
+                cola.size()
+            );
+        }
     }
 
     public static int getRecibidas() {
@@ -89,6 +149,10 @@ public class Estadisticas {
 
     public static int getProcesadas() {
         return procesadas.get();
+    }
+
+    public static int getRechazadas() {
+        return rechazadas.get();
     }
 
     public static int getActivas() {
@@ -102,25 +166,29 @@ public class Estadisticas {
     public static String getColaHtml() {
 
         if (cola.isEmpty()) {
-            return "<p class='vacio'>No hay solicitudes en cola.</p>";
+
+            return "<p class='vacio'>" +
+                   "No hay solicitudes en cola." +
+                   "</p>";
         }
 
-        StringBuilder html = new StringBuilder();
+        StringBuilder html =
+            new StringBuilder();
 
         int cantidad = 0;
 
         for (Solicitud solicitud : cola) {
 
             html.append(
-                "<div class='cola-item'>"
-                + "<b>#"
-                + solicitud.id
-                + "</b> GET "
-                + solicitud.ruta
-                + "<span>"
-                + solicitud.ip
-                + "</span>"
-                + "</div>"
+                "<div class='cola-item'>" +
+                "<b>#" +
+                solicitud.id +
+                "</b> GET " +
+                solicitud.ruta +
+                "<span>" +
+                solicitud.ip +
+                "</span>" +
+                "</div>"
             );
 
             cantidad++;
@@ -133,9 +201,9 @@ public class Estadisticas {
         if (cola.size() > 10) {
 
             html.append(
-                "<p class='vacio'>+ "
-                + (cola.size() - 10)
-                + " solicitudes más...</p>"
+                "<p class='vacio'>+ " +
+                (cola.size() - 10) +
+                " solicitudes más...</p>"
             );
         }
 
@@ -148,7 +216,11 @@ public class Estadisticas {
         String ip;
         String ruta = "pendiente";
 
-        Solicitud(String id, String ip) {
+        Solicitud(
+            String id,
+            String ip
+        ) {
+
             this.id = id;
             this.ip = ip;
         }
