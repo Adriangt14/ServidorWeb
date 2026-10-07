@@ -127,7 +127,7 @@ public class PaginaWeb {
                             </div>
 
                             <p class='descripcion'>
-                                Figura de colección de Columbina para decorar el escritorio y justificar gastos totalmente responsables.
+                                Figura de colección de Columbina para darle dinero a la empresa multimillonaria china con los peores derechos consumidor jamas vistos.
                             </p>
 
                             <div class='estrellas'>
@@ -156,7 +156,7 @@ public class PaginaWeb {
                             </div>
 
                             <p class='descripcion'>
-                                Figura de colección de Ahri para subir el ánimo cuando la ranked ya te bajó suficiente LP.
+                                Figura de colección de Ahri para Adrian Figueroa el amor de su vida hardStuck Platino IV.
                             </p>
 
                             <div class='estrellas'>
@@ -185,7 +185,7 @@ public class PaginaWeb {
                             </div>
 
                             <p class='descripcion'>
-                                Figura de colección de Rin para quien jura que solo verá un capítulo y termina viendo toda la temporada.
+                                Figura de colección de Rin, Jose Rios una vez dijo que le gustaba la musica y el anime, pero no la musica de anime. Todo wey
                             </p>
 
                             <div class='estrellas'>
