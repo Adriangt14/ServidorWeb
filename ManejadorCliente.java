@@ -260,5 +260,6 @@ public class ManejadorCliente {
         salida.println();
 
         salida.print(pagina);
+        salida.flush();
     }
 }
