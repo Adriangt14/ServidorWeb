@@ -2,7 +2,12 @@ import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 
 public class ManejadorCliente {
 
@@ -20,11 +25,6 @@ public class ManejadorCliente {
                 new InputStreamReader(
                     clienteSocket.getInputStream()
                 )
-            );
-
-            PrintWriter salida = new PrintWriter(
-                clienteSocket.getOutputStream(),
-                true
             );
 
             String peticion = entrada.readLine();
@@ -50,64 +50,83 @@ public class ManejadorCliente {
                     "[" + nombreHilo + "] Ruta solicitada: " + ruta
                 );
 
-                if (
-                    ruta.equals("/") ||
-                    ruta.equals("/solicitudes") ||
-                    ruta.equals("/hilos") ||
-                    ruta.equals("/clientes")
-                ) {
+                if (ruta.startsWith("/imagenes/")) {
 
-                    String pagina = PaginaWeb.generar(
+                    enviarImagen(
                         ruta,
-                        nombreHilo
+                        clienteSocket
                     );
-
-                    salida.println("HTTP/1.1 200 OK");
-                    salida.println(
-                        "Content-Type: text/html; charset=UTF-8"
-                    );
-                    salida.println(
-                        "Content-Length: " +
-                        pagina.getBytes().length
-                    );
-                    salida.println("Connection: close");
-                    salida.println();
-
-                    salida.println(pagina);
 
                 } else {
 
-                    salida.println(
-                        "HTTP/1.1 404 Not Found"
+                    PrintWriter salida = new PrintWriter(
+                        clienteSocket.getOutputStream(),
+                        true
                     );
 
-                    salida.println(
-                        "Content-Type: text/html; charset=UTF-8"
-                    );
+                    if (
+                        ruta.equals("/") ||
+                        ruta.equals("/productos") ||
+                        ruta.equals("/solicitudes") ||
+                        ruta.equals("/hilos") ||
+                        ruta.equals("/clientes")
+                    ) {
 
-                    salida.println(
-                        "Connection: close"
-                    );
+                        String pagina = PaginaWeb.generar(
+                            ruta,
+                            nombreHilo
+                        );
 
-                    salida.println();
+                        byte[] paginaBytes = pagina.getBytes(
+                            StandardCharsets.UTF_8
+                        );
 
-                    salida.println(
-                        "<html><body>"
-                    );
+                        salida.println("HTTP/1.1 200 OK");
+                        salida.println(
+                            "Content-Type: text/html; charset=UTF-8"
+                        );
+                        salida.println(
+                            "Content-Length: " + paginaBytes.length
+                        );
+                        salida.println("Connection: close");
+                        salida.println();
 
-                    salida.println(
-                        "<h2>404 - Página no encontrada</h2>"
-                    );
+                        salida.println(pagina);
 
-                    salida.println(
-                        "<p>Ruta solicitada: " +
-                        ruta +
-                        "</p>"
-                    );
+                    } else {
 
-                    salida.println(
-                        "</body></html>"
-                    );
+                        salida.println(
+                            "HTTP/1.1 404 Not Found"
+                        );
+
+                        salida.println(
+                            "Content-Type: text/html; charset=UTF-8"
+                        );
+
+                        salida.println(
+                            "Connection: close"
+                        );
+
+                        salida.println();
+
+                        salida.println(
+                            "<html><body>"
+                        );
+
+                        salida.println(
+                            "<h2>404 - Página no encontrada</h2>"
+                        );
+
+                        salida.println(
+                            "<p>Ruta solicitada: " +
+                            ruta +
+                            "</p>"
+                        );
+
+                        salida.println(
+                            "</body></html>"
+                        );
+                    }
                 }
             }
 
@@ -124,5 +143,68 @@ public class ManejadorCliente {
                 + e.getMessage()
             );
         }
+    }
+
+    private static void enviarImagen(
+        String ruta,
+        Socket clienteSocket
+    ) throws IOException {
+
+        String nombreArchivo = ruta.substring(
+            "/imagenes/".length()
+        );
+
+        Path carpetaImagenes = Paths.get(
+            "imagenes"
+        ).toAbsolutePath().normalize();
+
+        Path archivo = carpetaImagenes
+            .resolve(nombreArchivo)
+            .normalize();
+
+        OutputStream salida =
+            clienteSocket.getOutputStream();
+
+        if (
+            !archivo.startsWith(carpetaImagenes) ||
+            !Files.exists(archivo) ||
+            !nombreArchivo.toLowerCase().endsWith(".png")
+        ) {
+
+            String respuesta =
+                "HTTP/1.1 404 Not Found\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
+                "Connection: close\r\n" +
+                "\r\n" +
+                "Imagen no encontrada";
+
+            salida.write(
+                respuesta.getBytes(
+                    StandardCharsets.UTF_8
+                )
+            );
+
+            salida.flush();
+
+            return;
+        }
+
+        byte[] imagen = Files.readAllBytes(archivo);
+
+        String encabezados =
+            "HTTP/1.1 200 OK\r\n" +
+            "Content-Type: image/png\r\n" +
+            "Content-Length: " + imagen.length + "\r\n" +
+            "Connection: close\r\n" +
+            "\r\n";
+
+        salida.write(
+            encabezados.getBytes(
+                StandardCharsets.UTF_8
+            )
+        );
+
+        salida.write(imagen);
+        salida.flush();
     }
 }

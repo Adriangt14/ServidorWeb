@@ -8,12 +8,12 @@ public class PaginaWeb {
 
             contenido = """
                 <h1>Solicitudes HTTP</h1>
-                <p class='subtitulo'>Registro de las solicitudes recibidas por el servidor.</p>
+                <p>Aquí se mostrarán las solicitudes recibidas por el servidor.</p>
 
                 <div class='card'>
-                    <span class='etiqueta'>SOLICITUD ACTUAL</span>
-                    <h3>GET /solicitudes</h3>
-                    <p>Atendida por: <b>%s</b></p>
+                    <h3>Solicitud actual</h3>
+                    <p>GET /solicitudes</p>
+                    <p>Atendida por: %s</p>
                 </div>
                 """.formatted(hilo);
 
@@ -21,20 +21,12 @@ public class PaginaWeb {
 
             contenido = """
                 <h1>Hilos</h1>
-                <p class='subtitulo'>Estado del Thread Pool utilizado por el servidor.</p>
+                <p>Información sobre los hilos del servidor.</p>
 
-                <div class='cards'>
-                    <div class='card'>
-                        <span class='etiqueta'>THREAD POOL</span>
-                        <h2>10</h2>
-                        <p>Hilos configurados</p>
-                    </div>
-
-                    <div class='card'>
-                        <span class='etiqueta'>HILO ACTUAL</span>
-                        <h3>%s</h3>
-                        <p>Atendiendo esta solicitud</p>
-                    </div>
+                <div class='card'>
+                    <h3>Thread Pool</h3>
+                    <p>Hilos configurados: 10</p>
+                    <p>Solicitud atendida por: %s</p>
                 </div>
                 """.formatted(hilo);
 
@@ -42,94 +34,286 @@ public class PaginaWeb {
 
             contenido = """
                 <h1>Clientes</h1>
-                <p class='subtitulo'>Información de los clientes conectados al servidor.</p>
+                <p>Información de los clientes conectados al servidor.</p>
 
                 <div class='card'>
-                    <span class='etiqueta'>ESTADO</span>
-                    <h3>Servidor preparado</h3>
-                    <p>El servidor puede recibir nuevas conexiones.</p>
+                    <h3>Estado</h3>
+                    <p>Servidor preparado para recibir clientes.</p>
+                </div>
+                """;
+
+        } else if (pagina.equals("/productos")) {
+
+            contenido = """
+                <div class='encabezado-productos'>
+                    <h1>Productos</h1>
+                    <p>Productos disponibles actualmente.</p>
+                </div>
+
+                <h2 class='titulo-seccion'>Productos destacados</h2>
+
+                <div class='productos'>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/Audifonos.png' alt='AirPods'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>AirPods</h3>
+                                <strong>Q350.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Audífonos inalámbricos para escuchar música y fingir que no escuchaste cuando te llamaron.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(24)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/laptop.png' alt='Laptop'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>Laptop</h3>
+                                <strong>Q5,999.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Laptop para estudiar, programar y tener 37 pestañas abiertas como si nada pasara.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(18)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/Columbina.png' alt='Columbina'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>Columbina</h3>
+                                <strong>Q5,999.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Figura de colección de Columbina para decorar el escritorio y justificar gastos totalmente responsables.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(18)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/Ahri.png' alt='Ahri'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>Ahri</h3>
+                                <strong>Q5,999.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Figura de colección de Ahri para subir el ánimo cuando la ranked ya te bajó suficiente LP.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(18)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/Rin.png' alt='Rin'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>Rin</h3>
+                                <strong>Q5,999.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Figura de colección de Rin para quien jura que solo verá un capítulo y termina viendo toda la temporada.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(18)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/teclado.png' alt='Teclado'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>Teclado Mecánico</h3>
+                                <strong>Q425.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Teclado mecánico para programar, jugar y hacer suficiente ruido para que toda la casa lo sepa.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(31)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class='producto'>
+
+                        <div class='producto-imagen'>
+                            <img src='/imagenes/mouse.png' alt='Mouse'>
+                            <span class='favorito'>♡</span>
+                        </div>
+
+                        <div class='producto-info'>
+
+                            <div class='producto-nombre-precio'>
+                                <h3>Mouse Gamer</h3>
+                                <strong>Q225.00</strong>
+                            </div>
+
+                            <p class='descripcion'>
+                                Mouse gamer de alta precisión para apuntar fino y culpar al ping cuando algo salga mal.
+                            </p>
+
+                            <div class='estrellas'>
+                                ★★★★★
+                                <span>(15)</span>
+                            </div>
+
+                            <button>Agregar al carrito</button>
+
+                        </div>
+
+                    </div>
+
                 </div>
                 """;
 
         } else {
 
             contenido = """
-                <div class='hero'>
-                    <span class='etiqueta'>SERVIDOR WEB CONCURRENTE</span>
-                    <h1>Servidor Concurrente</h1>
-                    <p>Una tienda tecnológica desarrollada para demostrar
-                       el funcionamiento de múltiples clientes y hilos.</p>
-                    <a class='boton' href='/productos'>Ver productos</a>
-                </div>
-
-                <h2>Estado del servidor</h2>
+                <h1>Servidor Concurrente</h1>
+                <p>Bienvenido al servidor web concurrente de la UMG.</p>
 
                 <div class='cards'>
+
                     <div class='card'>
-                        <span class='etiqueta'>SERVIDOR</span>
-                        <h3 class='online'>● ONLINE</h3>
-                        <p>Funcionando correctamente</p>
+                        <h3>Servidor</h3>
+                        <p class='estado'>● ONLINE</p>
                     </div>
 
                     <div class='card'>
-                        <span class='etiqueta'>THREAD POOL</span>
-                        <h3>10 hilos</h3>
-                        <p>Solicitudes procesadas</p>
+                        <h3>Thread Pool</h3>
+                        <p>10 hilos disponibles</p>
                     </div>
 
                     <div class='card'>
-                        <span class='etiqueta'>SOLICITUD</span>
-                        <h3>GET /</h3>
-                        <p>Atendida por %s</p>
+                        <h3>Solicitud</h3>
+                        <p>GET /</p>
                     </div>
+
                 </div>
 
-                <h2>Productos destacados</h2>
-
-                <div class='productos'>
-                    <div class='producto'>
-                        <div class='icono'>L</div>
-                        <h3>Laptop Pro</h3>
-                        <p>Alto rendimiento para trabajo y estudio.</p>
-                        <strong>Q4,500</strong>
-                        <a href='/comprar/1'>Comprar</a>
-                    </div>
-
-                    <div class='producto'>
-                        <div class='icono'>H</div>
-                        <h3>Headphones X</h3>
-                        <p>Audio inalámbrico para todos los días.</p>
-                        <strong>Q350</strong>
-                        <a href='/comprar/2'>Comprar</a>
-                    </div>
-
-                    <div class='producto'>
-                        <div class='icono'>K</div>
-                        <h3>Keyboard Pro</h3>
-                        <p>Teclado mecánico para productividad.</p>
-                        <strong>Q450</strong>
-                        <a href='/comprar/3'>Comprar</a>
-                    </div>
+                <div class='card'>
+                    <h3>Actividad</h3>
+                    <p>Solicitud atendida por: %s</p>
                 </div>
                 """.formatted(hilo);
         }
 
-        return """
+        String html = """
             <!DOCTYPE html>
             <html>
+
             <head>
+
                 <meta charset='UTF-8'>
                 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                <title>NEXUS | UMG</title>
+
+                <title>Servidor UMG</title>
 
                 <style>
-                    * { box-sizing: border-box; }
+
+                    * {
+                        box-sizing: border-box;
+                    }
 
                     body {
                         margin: 0;
                         font-family: Arial, sans-serif;
-                        background: #f5f6f8;
-                        color: #171717;
+                        background: #f5f7fb;
+                        color: #1f2937;
                     }
 
                     .contenedor {
@@ -138,24 +322,24 @@ public class PaginaWeb {
                     }
 
                     .menu {
-                        width: 235px;
+                        width: 230px;
                         background: #111827;
                         color: white;
-                        padding: 28px 18px;
+                        padding: 25px 15px;
+                        flex-shrink: 0;
                     }
 
                     .logo {
-                        font-size: 21px;
+                        font-size: 22px;
                         font-weight: bold;
-                        padding: 8px;
-                        margin-bottom: 35px;
-                        letter-spacing: 1px;
+                        padding: 10px;
+                        margin-bottom: 30px;
                     }
 
                     .menu h4 {
                         color: #9ca3af;
-                        font-size: 11px;
-                        margin: 0 8px 10px;
+                        font-size: 12px;
+                        margin-left: 10px;
                         text-transform: uppercase;
                     }
 
@@ -163,9 +347,9 @@ public class PaginaWeb {
                         display: block;
                         color: #d1d5db;
                         text-decoration: none;
-                        padding: 12px;
-                        border-radius: 7px;
-                        margin: 4px 0;
+                        padding: 12px 10px;
+                        border-radius: 6px;
+                        margin: 5px 0;
                     }
 
                     .menu a:hover {
@@ -175,132 +359,186 @@ public class PaginaWeb {
 
                     .principal {
                         flex: 1;
-                        padding: 35px;
-                        max-width: 1250px;
+                        padding: 30px;
+                        min-width: 0;
                     }
 
                     .barra {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 35px;
+                        gap: 20px;
+                        margin-bottom: 30px;
                     }
 
                     .barra h2 {
                         margin: 0;
                     }
 
-                    h1 {
-                        font-size: 38px;
-                        margin: 8px 0;
-                    }
-
-                    h2 {
-                        margin-top: 35px;
-                    }
-
-                    .subtitulo,
-                    .hero p,
-                    .card p,
-                    .producto p {
-                        color: #6b7280;
-                    }
-
-                    .estado,
-                    .online {
+                    .estado {
                         color: #16a34a;
                         font-weight: bold;
                     }
 
-                    .hero {
+                    .cards {
+                        display: flex;
+                        gap: 20px;
+                        margin: 25px 0;
+                    }
+
+                    .card {
                         background: white;
-                        border: 1px solid #e5e7eb;
-                        border-radius: 12px;
-                        padding: 40px;
-                        margin-bottom: 35px;
-                    }
-
-                    .hero p {
-                        max-width: 600px;
-                        line-height: 1.6;
-                    }
-
-                    .etiqueta {
-                        color: #6b7280;
-                        font-size: 11px;
-                        font-weight: bold;
-                        letter-spacing: 1px;
-                    }
-
-                    .boton,
-                    .producto a {
-                        display: inline-block;
-                        background: #171717;
-                        color: white;
-                        text-decoration: none;
-                        padding: 10px 15px;
-                        border-radius: 6px;
-                        margin-top: 12px;
-                    }
-
-                    .cards,
-                    .productos {
-                        display: grid;
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 18px;
-                        margin-top: 18px;
-                    }
-
-                    .card,
-                    .producto {
-                        background: white;
-                        border: 1px solid #e5e7eb;
                         border-radius: 10px;
-                        padding: 23px;
+                        padding: 20px;
+                        margin-bottom: 20px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
                     }
 
-                    .card h2,
+                    .cards .card {
+                        flex: 1;
+                    }
+
                     .card h3 {
-                        margin: 10px 0 5px;
+                        margin-top: 0;
                     }
 
-                    .producto {
-                        transition: transform 0.15s;
-                    }
-
-                    .producto:hover {
-                        transform: translateY(-3px);
-                    }
-
-                    .producto h3 {
+                    .encabezado-productos h1 {
                         margin-bottom: 8px;
                     }
 
-                    .producto strong {
-                        display: block;
-                        font-size: 21px;
-                        margin-top: 18px;
+                    .encabezado-productos p {
+                        color: #6b7280;
+                        margin-top: 0;
                     }
 
-                    .icono {
-                        width: 42px;
-                        height: 42px;
+                    .titulo-seccion {
+                        margin-top: 35px;
+                        margin-bottom: 20px;
+                    }
+
+                    .productos {
+                        display: flex;
+                        gap: 20px;
+                        overflow-x: auto;
+                        padding-bottom: 20px;
+                        scroll-behavior: smooth;
+                    }
+
+                    .producto {
+                        flex: 0 0 260px;
+                        background: white;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        border: 1px solid #e5e7eb;
+                        transition: transform 0.2s, box-shadow 0.2s;
+                        display: flex;
+                        flex-direction: column;
+                    }
+
+                    .producto:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 0 8px 20px rgba(0,0,0,0.10);
+                    }
+
+                    .producto-imagen {
+                        height: 220px;
+                        background: #f3f4f6;
+                        position: relative;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        background: #f0f1f3;
-                        border-radius: 8px;
-                        font-weight: bold;
-                        font-size: 18px;
+                        padding: 20px;
                     }
 
-                    @media (max-width: 800px) {
+                    .producto-imagen img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: contain;
+                        display: block;
+                    }
+
+                    .favorito {
+                        position: absolute;
+                        top: 12px;
+                        right: 12px;
+                        background: white;
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 22px;
+                        cursor: pointer;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+                    }
+
+                    .producto-info {
+                        padding: 17px;
+                        display: flex;
+                        flex-direction: column;
+                        flex: 1;
+                    }
+
+                    .producto-nombre-precio {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        gap: 10px;
+                    }
+
+                    .producto-nombre-precio h3 {
+                        margin: 0;
+                        font-size: 17px;
+                    }
+
+                    .producto-nombre-precio strong {
+                        white-space: nowrap;
+                        font-size: 16px;
+                    }
+
+                    .descripcion {
+                        color: #6b7280;
+                        font-size: 13px;
+                        min-height: 48px;
+                        margin: 10px 0;
+                    }
+
+                    .estrellas {
+                        color: #16a34a;
+                        font-size: 15px;
+                        margin-bottom: 15px;
+                    }
+
+                    .estrellas span {
+                        color: #6b7280;
+                        font-size: 12px;
+                    }
+
+                    .producto button {
+                        background: white;
+                        border: 1px solid #1f2937;
+                        border-radius: 20px;
+                        padding: 9px 16px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        margin-top: auto;
+                        align-self: flex-start;
+                    }
+
+                    .producto button:hover {
+                        background: #111827;
+                        color: white;
+                    }
+
+                    @media (max-width: 768px) {
+
                         .contenedor {
                             flex-direction: column;
                         }
 
                         .menu {
-                            width: 100%%;
+                            width: 100%;
                             padding: 15px;
                         }
 
@@ -315,64 +553,124 @@ public class PaginaWeb {
 
                         .menu a {
                             display: inline-block;
-                            margin: 2px;
+                            margin: 3px;
+                            padding: 10px 12px;
+                            font-size: 14px;
                         }
 
                         .principal {
-                            width: 100%%;
-                            padding: 22px;
-                        }
-
-                        .cards,
-                        .productos {
-                            grid-template-columns: 1fr;
+                            padding: 20px;
                         }
 
                         .barra {
-                            align-items: flex-start;
                             flex-direction: column;
+                            align-items: flex-start;
                             gap: 10px;
                         }
 
-                        h1 {
-                            font-size: 30px;
+                        .cards {
+                            flex-direction: column;
+                            gap: 0;
                         }
 
-                        .hero {
-                            padding: 28px;
+                        .producto {
+                            flex: 0 0 240px;
+                        }
+
+                        .producto-imagen {
+                            height: 200px;
                         }
                     }
+
+                    @media (max-width: 480px) {
+
+                        .principal {
+                            padding: 16px;
+                        }
+
+                        .principal h1 {
+                            font-size: 25px;
+                        }
+
+                        .barra h2 {
+                            font-size: 20px;
+                        }
+
+                        .menu a {
+                            font-size: 13px;
+                            padding: 9px;
+                        }
+
+                        .producto {
+                            flex: 0 0 225px;
+                        }
+
+                        .producto-imagen {
+                            height: 185px;
+                        }
+                    }
+
                 </style>
+
             </head>
 
             <body>
+
                 <div class='contenedor'>
 
                     <aside class='menu'>
-                        <div class='logo'>NEXUS / UMG</div>
+
+                        <div class='logo'>
+                            SERVIDOR UMG
+                        </div>
 
                         <h4>Servidor</h4>
 
-                        <a href='/'>Dashboard</a>
-                        <a href='/solicitudes'>Solicitudes</a>
-                        <a href='/hilos'>Hilos</a>
-                        <a href='/clientes'>Clientes</a>
+                        <a href='/'>
+                            Dashboard
+                        </a>
 
-                        <h4 style='margin-top:25px;'>Tienda</h4>
-                        <a href='/productos'>Productos</a>
+                        <a href='/productos'>
+                            Productos
+                        </a>
+
+                        <a href='/solicitudes'>
+                            Solicitudes
+                        </a>
+
+                        <a href='/hilos'>
+                            Hilos
+                        </a>
+
+                        <a href='/clientes'>
+                            Clientes
+                        </a>
+
                     </aside>
 
                     <main class='principal'>
+
                         <div class='barra'>
+
                             <h2>Panel del servidor</h2>
-                            <span class='estado'>● SERVIDOR ONLINE</span>
+
+                            <span class='estado'>
+                                ● SERVIDOR ONLINE
+                            </span>
+
                         </div>
 
-                        %s
+                        {{CONTENIDO}}
+
                     </main>
+
                 </div>
+
             </body>
+
             </html>
-            """.formatted(contenido);
+            """;
+
+        return html.replace("{{CONTENIDO}}", contenido);
     }
 }
