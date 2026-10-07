@@ -66,7 +66,7 @@ public class ManejadorCliente {
                 enviarRespuesta(
                     salida,
                     "HTTP/1.1 400 Bad Request",
-                    PaginaWeb.error404(
+                    paginaError(
                         "Solicitud no soportada",
                         nombreHilo
                     )
@@ -83,7 +83,7 @@ public class ManejadorCliente {
                 enviarRespuesta(
                     salida,
                     "HTTP/1.1 400 Bad Request",
-                    PaginaWeb.error404(
+                    paginaError(
                         "Solicitud invalida",
                         nombreHilo
                     )
@@ -133,16 +133,13 @@ public class ManejadorCliente {
 
             } else {
 
-                String pagina404 =
-                    PaginaWeb.error404(
-                        ruta,
-                        nombreHilo
-                    );
-
                 enviarRespuesta(
                     salida,
                     "HTTP/1.1 404 Not Found",
-                    pagina404
+                    paginaError(
+                        ruta,
+                        nombreHilo
+                    )
                 );
             }
 
@@ -247,6 +244,26 @@ public class ManejadorCliente {
                id.equals("7");
     }
 
+    private static String paginaError(
+        String mensaje,
+        String nombreHilo
+    ) {
+
+        return
+            "<!DOCTYPE html>" +
+            "<html>" +
+            "<head>" +
+            "<meta charset=\"UTF-8\">" +
+            "<title>Error</title>" +
+            "</head>" +
+            "<body>" +
+            "<h1>404 - Pagina no encontrada</h1>" +
+            "<p>" + mensaje + "</p>" +
+            "<p>Hilo: " + nombreHilo + "</p>" +
+            "</body>" +
+            "</html>";
+    }
+
     private static void enviarRespuesta(
         PrintWriter salida,
         String estado,
@@ -313,6 +330,7 @@ public class ManejadorCliente {
             String respuesta =
                 "HTTP/1.1 404 Not Found\r\n" +
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
+                "Content-Length: 21\r\n" +
                 "Connection: close\r\n" +
                 "\r\n" +
                 "Imagen no encontrada";
