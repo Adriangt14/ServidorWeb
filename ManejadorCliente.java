@@ -259,6 +259,6 @@ public class ManejadorCliente {
 
         salida.println();
 
-        salida.println(pagina);
+        salida.print(pagina);
     }
 }

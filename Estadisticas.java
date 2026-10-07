@@ -25,10 +25,6 @@ public class Estadisticas {
     private static final ConcurrentHashMap<String, Solicitud> solicitudes =
         new ConcurrentHashMap<>();
 
-    /*
-     * Bajo carga pesada no queremos imprimir
-     * miles de lineas por segundo.
-     */
     private static final boolean LOG_DETALLADO = false;
 
     public static String registrarSolicitud(String ip) {
@@ -42,13 +38,10 @@ public class Estadisticas {
             new Solicitud(id, ip);
 
         solicitudes.put(id, solicitud);
-
         cola.add(solicitud);
-
         recibidas.incrementAndGet();
 
         if (LOG_DETALLADO) {
-
             System.out.println(
                 "[Solicitud #" + id +
                 "] Encolada | Cola: " +
@@ -73,7 +66,6 @@ public class Estadisticas {
         rechazadas.incrementAndGet();
 
         if (LOG_DETALLADO) {
-
             System.out.println(
                 "[Solicitud #" + id +
                 "] Rechazada por cola llena"
@@ -108,7 +100,6 @@ public class Estadisticas {
         activas.incrementAndGet();
 
         if (LOG_DETALLADO) {
-
             System.out.println(
                 "[Solicitud #" + id +
                 "] Procesando | Cola: " +
@@ -125,17 +116,13 @@ public class Estadisticas {
     ) {
 
         activas.decrementAndGet();
-
         procesadas.incrementAndGet();
-
         solicitudes.remove(id);
 
         if (LOG_DETALLADO) {
-
             System.out.println(
                 "[Solicitud #" + id +
-                "] Completada | " +
-                "Procesadas: " +
+                "] Completada | Procesadas: " +
                 procesadas.get() +
                 " | Cola: " +
                 cola.size()
@@ -166,7 +153,6 @@ public class Estadisticas {
     public static String getColaHtml() {
 
         if (cola.isEmpty()) {
-
             return "<p class='vacio'>" +
                    "No hay solicitudes en cola." +
                    "</p>";
@@ -198,11 +184,12 @@ public class Estadisticas {
             }
         }
 
-        if (cola.size() > 10) {
+        int totalCola = cola.size();
 
+        if (totalCola > 10) {
             html.append(
                 "<p class='vacio'>+ " +
-                (cola.size() - 10) +
+                (totalCola - 10) +
                 " solicitudes más...</p>"
             );
         }
@@ -220,7 +207,6 @@ public class Estadisticas {
             String id,
             String ip
         ) {
-
             this.id = id;
             this.ip = ip;
         }
