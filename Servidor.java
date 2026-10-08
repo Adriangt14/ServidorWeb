@@ -9,9 +9,9 @@ public class Servidor {
 
     private static final int HILOS = 10;
 
-    private static final int COLA_MAXIMA = 100;
+    private static final int COLA_MAXIMA = 300;
 
-    private static final int BACKLOG = 100;
+    private static final int BACKLOG = 300;
 
     public static void main(String[] args) {
 
