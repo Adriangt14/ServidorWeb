@@ -1,3 +1,4 @@
+
 import java.util.Locale;
 
 public final class Rutas {
@@ -40,9 +41,11 @@ public final class Rutas {
 
         String rutaLimpia = ruta.toLowerCase(Locale.ROOT);
 
-        if (rutaLimpia.contains("\\")
-                || rutaLimpia.contains("..")
-                || rutaLimpia.contains("\0")) {
+        if (
+            rutaLimpia.contains("\\") ||
+            rutaLimpia.contains("..") ||
+            rutaLimpia.contains("\0")
+        ) {
             return true;
         }
 
@@ -51,6 +54,15 @@ public final class Rutas {
             if (segmento.startsWith(".")) {
                 return true;
             }
+        }
+
+        // Bloquear las páginas internas para visitantes públicos.
+        if (
+            rutaLimpia.equals(SOLICITUDES) ||
+            rutaLimpia.equals(HILOS) ||
+            rutaLimpia.equals(CLIENTES)
+        ) {
+            return true;
         }
 
         return false;
