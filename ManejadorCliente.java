@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,9 +56,9 @@ public class ManejadorCliente {
                 return;
             }
 
-            String[] partes = peticion.split(" ", 3);
+            String[] partes = peticion.split("\\s+", 3);
 
-            if (partes.length < 2 || !partes[0].equals("GET")) {
+            if (partes.length < 2) {
 
                 enviarTexto(
                     clienteSocket,
@@ -67,17 +69,51 @@ public class ManejadorCliente {
                 return;
             }
 
-            ruta = partes[1];
+            if (!partes[0].equals("GET")) {
 
-            int consulta = ruta.indexOf('?');
+                enviarTexto(
+                    clienteSocket,
+                    "HTTP/1.1 405 Method Not Allowed",
+                    paginaError("Método HTTP no permitido.")
+                );
 
-            if (consulta >= 0) {
-                ruta = ruta.substring(0, consulta);
+                return;
+            }
+
+            try {
+
+                URI uri = new URI(partes[1]);
+
+                ruta = uri.getPath();
+
+                if (ruta == null || !ruta.startsWith("/")) {
+                    ruta = "";
+                }
+
+            } catch (URISyntaxException e) {
+
+                ruta = "";
+
+                Estadisticas.actualizarRuta(
+                    id,
+                    Rutas.BLOQUEADO
+                );
+
+                enviarTexto(
+                    clienteSocket,
+                    "HTTP/1.1 400 Bad Request",
+                    paginaError("Ruta no válida.")
+                );
+
+                return;
             }
 
             if (Rutas.esRutaProtegida(ruta)) {
 
-                Estadisticas.actualizarRuta(id, Rutas.BLOQUEADO);
+                Estadisticas.actualizarRuta(
+                    id,
+                    Rutas.BLOQUEADO
+                );
 
                 enviarTexto(
                     clienteSocket,
@@ -162,7 +198,9 @@ public class ManejadorCliente {
             }
 
             if (linea.length() >= MAX_LINEA_HTTP) {
-                throw new IOException("Línea HTTP demasiado larga.");
+                throw new IOException(
+                    "Línea HTTP demasiado larga."
+                );
             }
 
             linea.append((char) caracter);
@@ -181,13 +219,17 @@ public class ManejadorCliente {
         String pagina
     ) throws IOException {
 
-        byte[] cuerpo = pagina.getBytes(StandardCharsets.UTF_8);
+        byte[] cuerpo =
+            pagina.getBytes(StandardCharsets.UTF_8);
 
         String encabezados =
             estado + "\r\n" +
             "Content-Type: text/html; charset=UTF-8\r\n" +
             "Content-Length: " + cuerpo.length + "\r\n" +
             "X-Content-Type-Options: nosniff\r\n" +
+            "X-Frame-Options: DENY\r\n" +
+            "Referrer-Policy: no-referrer\r\n" +
+            "Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'\r\n" +
             "Connection: close\r\n\r\n";
 
         OutputStream salida = socket.getOutputStream();
@@ -210,29 +252,61 @@ public class ManejadorCliente {
         );
 
         if (!IMAGENES_PERMITIDAS.contains(nombre)) {
+
             enviarTexto(
                 socket,
                 "HTTP/1.1 404 Not Found",
                 paginaError("Imagen no encontrada.")
             );
+
             return;
         }
 
-        Path carpeta = Paths.get("imagenes")
+        Path carpetaBase = Paths.get("imagenes")
             .toAbsolutePath()
             .normalize();
 
-        Path archivo = carpeta.resolve(nombre).normalize();
+        if (!Files.isDirectory(carpetaBase)) {
 
-        if (
-            !archivo.startsWith(carpeta) ||
-            !Files.isRegularFile(archivo)
-        ) {
             enviarTexto(
                 socket,
                 "HTTP/1.1 404 Not Found",
                 paginaError("Imagen no encontrada.")
             );
+
+            return;
+        }
+
+        Path carpeta = carpetaBase.toRealPath();
+
+        Path candidato = carpeta
+            .resolve(nombre)
+            .normalize();
+
+        if (
+            !candidato.startsWith(carpeta) ||
+            !Files.isRegularFile(candidato)
+        ) {
+
+            enviarTexto(
+                socket,
+                "HTTP/1.1 404 Not Found",
+                paginaError("Imagen no encontrada.")
+            );
+
+            return;
+        }
+
+        Path archivo = candidato.toRealPath();
+
+        if (!archivo.startsWith(carpeta)) {
+
+            enviarTexto(
+                socket,
+                "HTTP/1.1 404 Not Found",
+                paginaError("Imagen no encontrada.")
+            );
+
             return;
         }
 
@@ -252,11 +326,13 @@ public class ManejadorCliente {
         };
 
         if (tipo == null) {
+
             enviarTexto(
                 socket,
                 "HTTP/1.1 404 Not Found",
                 paginaError("Formato de imagen no permitido.")
             );
+
             return;
         }
 

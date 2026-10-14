@@ -45,6 +45,7 @@ public class Estadisticas {
 
         solicitudes.put(id, solicitud);
         cola.add(solicitud);
+
         recibidas.incrementAndGet();
 
         if (LOG_DETALLADO) {
@@ -69,9 +70,9 @@ public class Estadisticas {
 
     public static void actualizarRuta(String id, String ruta) {
 
-        Solicitud solicitud = solicitudes.get(id);
-
         String rutaLimpia = Rutas.rutaEstadistica(ruta);
+
+        Solicitud solicitud = solicitudes.get(id);
 
         if (solicitud != null) {
             solicitud.ruta = rutaLimpia;
@@ -101,7 +102,9 @@ public class Estadisticas {
         String hilo
     ) {
 
-        activas.updateAndGet(valor -> Math.max(0, valor - 1));
+        activas.updateAndGet(
+            valor -> Math.max(0, valor - 1)
+        );
 
         procesadas.incrementAndGet();
 
@@ -146,10 +149,11 @@ public class Estadisticas {
 
         for (int i = 0; i < limite; i++) {
 
-            Map.Entry<String, LongAdder> entrada = lista.get(i);
+            Map.Entry<String, LongAdder> entrada =
+                lista.get(i);
 
             html.append("""
-                <div class='ruta-estadistica'>
+                <div class="ruta-estadistica">
                     <span>%s</span>
                     <strong>%d</strong>
                 </div>
@@ -196,7 +200,6 @@ public class Estadisticas {
         int totalCola = cola.size();
 
         if (totalCola > 10) {
-
             html.append(
                 "<p class='vacio'>+ " +
                 (totalCola - 10) +

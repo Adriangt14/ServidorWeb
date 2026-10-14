@@ -40,13 +40,13 @@ public final class Rutas {
 
         String rutaLimpia = ruta.toLowerCase(Locale.ROOT);
 
-        if (rutaLimpia.contains("\\") || rutaLimpia.contains("..")) {
+        if (rutaLimpia.contains("\\")
+                || rutaLimpia.contains("..")
+                || rutaLimpia.contains("\0")) {
             return true;
         }
 
-        String[] segmentos = rutaLimpia.split("/");
-
-        for (String segmento : segmentos) {
+        for (String segmento : rutaLimpia.split("/")) {
 
             if (segmento.startsWith(".")) {
                 return true;
@@ -56,33 +56,20 @@ public final class Rutas {
         return false;
     }
 
-    public static String rutaProducto(int id) {
-
-        return switch (id) {
-            case 1 -> RAZER;
-            case 2 -> MIKU;
-            case 3 -> GAREN;
-            case 4 -> LOGITECH_PRO;
-            case 5 -> LOGITECH_COMBO;
-            case 6 -> TECLADO;
-            default -> null;
-        };
-    }
-
     public static boolean esRutaProducto(String ruta) {
 
-        return ruta.equals(RAZER)
-            || ruta.equals(MIKU)
-            || ruta.equals(GAREN)
-            || ruta.equals(LOGITECH_PRO)
-            || ruta.equals(LOGITECH_COMBO)
-            || ruta.equals(TECLADO);
+        return RAZER.equals(ruta)
+            || MIKU.equals(ruta)
+            || GAREN.equals(ruta)
+            || LOGITECH_PRO.equals(ruta)
+            || LOGITECH_COMBO.equals(ruta)
+            || TECLADO.equals(ruta);
     }
 
     public static boolean esRutaAlbum(String ruta) {
 
-        return ruta.equals(ALBUM_NOTHING)
-            || ruta.equals(ALBUM_VOZ);
+        return ALBUM_NOTHING.equals(ruta)
+            || ALBUM_VOZ.equals(ruta);
     }
 
     public static boolean esImagen(String ruta) {
@@ -92,22 +79,30 @@ public final class Rutas {
 
     public static boolean esPaginaValida(String ruta) {
 
-        return ruta.equals(INICIO)
-            || ruta.equals(PRODUCTOS)
-            || ruta.equals(TECNOLOGIA)
-            || ruta.equals(GAMING)
-            || ruta.equals(ACCESORIOS)
-            || ruta.equals(MUSICA)
-            || ruta.equals(SERVICIOS)
-            || ruta.equals(NOSOTROS)
-            || ruta.equals(SOLICITUDES)
-            || ruta.equals(HILOS)
-            || ruta.equals(CLIENTES)
+        return INICIO.equals(ruta)
+            || PRODUCTOS.equals(ruta)
+            || TECNOLOGIA.equals(ruta)
+            || GAMING.equals(ruta)
+            || ACCESORIOS.equals(ruta)
+            || MUSICA.equals(ruta)
+            || SERVICIOS.equals(ruta)
+            || NOSOTROS.equals(ruta)
+            || SOLICITUDES.equals(ruta)
+            || HILOS.equals(ruta)
+            || CLIENTES.equals(ruta)
             || esRutaProducto(ruta)
             || esRutaAlbum(ruta);
     }
 
     public static String rutaEstadistica(String ruta) {
+
+        if (BLOQUEADO.equals(ruta)) {
+            return BLOQUEADO;
+        }
+
+        if (NO_ENCONTRADO.equals(ruta)) {
+            return NO_ENCONTRADO;
+        }
 
         if (esRutaProtegida(ruta)) {
             return BLOQUEADO;
