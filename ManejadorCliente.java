@@ -1,8 +1,10 @@
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class ManejadorCliente {
 
@@ -32,9 +35,7 @@ public class ManejadorCliente {
     public static void atender(Socket clienteSocket, String id) {
 
         String hilo = Thread.currentThread().getName();
-
         String ip = clienteSocket.getInetAddress().getHostAddress();
-
         String ruta = Rutas.INICIO;
 
         Estadisticas.iniciarSolicitud(id);
@@ -50,20 +51,26 @@ public class ManejadorCliente {
                 )
             );
 
-            String peticion = leerLineaLimitada(entrada);
+            String peticion = leerLineaLimitada(
+                entrada,
+                clienteSocket
+            );
 
             if (peticion == null || peticion.isBlank()) {
                 return;
             }
 
-            String[] partes = peticion.split("\\s+", 3);
+            String[] partes = peticion.trim().split("\\s+");
 
-            if (partes.length < 2) {
+            if (
+                partes.length != 3 ||
+                !partes[2].matches("HTTP/1\\.[01]")
+            ) {
 
                 enviarTexto(
                     clienteSocket,
                     "HTTP/1.1 400 Bad Request",
-                    paginaError("Solicitud no válida.")
+                    paginaError("Solicitud HTTP no válida.")
                 );
 
                 return;
@@ -150,7 +157,7 @@ public class ManejadorCliente {
                 pagina
             );
 
-        } catch (java.net.SocketTimeoutException e) {
+        } catch (SocketTimeoutException e) {
 
             System.err.println(
                 "[" + hilo + "] Tiempo de lectura agotado: " + ip
@@ -180,17 +187,53 @@ public class ManejadorCliente {
     }
 
     private static String leerLineaLimitada(
-        BufferedReader entrada
+        BufferedReader entrada,
+        Socket socket
     ) throws IOException {
 
         StringBuilder linea = new StringBuilder();
 
-        int caracter;
+        long limite = System.nanoTime()
+            + TimeUnit.MILLISECONDS.toNanos(TIMEOUT_LECTURA_MS);
 
-        while ((caracter = entrada.read()) != -1) {
+        while (true) {
+
+            long restante = limite - System.nanoTime();
+
+            if (restante <= 0) {
+                throw new SocketTimeoutException(
+                    "Tiempo máximo para recibir la petición excedido."
+                );
+            }
+
+            long timeoutMs =
+                (restante + 999_999L) / 1_000_000L;
+
+            socket.setSoTimeout(
+                (int) Math.max(1L, timeoutMs)
+            );
+
+            int caracter = entrada.read();
+
+            if (System.nanoTime() - limite >= 0) {
+                throw new SocketTimeoutException(
+                    "Tiempo máximo para recibir la petición excedido."
+                );
+            }
+
+            if (caracter == -1) {
+
+                if (linea.isEmpty()) {
+                    return null;
+                }
+
+                throw new IOException(
+                    "Petición HTTP incompleta."
+                );
+            }
 
             if (caracter == '\n') {
-                break;
+                return linea.toString();
             }
 
             if (caracter == '\r') {
@@ -205,12 +248,6 @@ public class ManejadorCliente {
 
             linea.append((char) caracter);
         }
-
-        if (caracter == -1 && linea.isEmpty()) {
-            return null;
-        }
-
-        return linea.toString();
     }
 
     private static void enviarTexto(
