@@ -8,10 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 public class ManejadorCliente {
 
     private static final int TIMEOUT_LECTURA_MS = 5_000;
+
     private static final int MAX_LINEA_HTTP = 4_096;
 
     public static void atender(
@@ -93,6 +95,18 @@ public class ManejadorCliente {
             }
 
             ruta = partes[1];
+
+            int indiceConsulta =
+                ruta.indexOf('?');
+
+            if (indiceConsulta >= 0) {
+
+                ruta =
+                    ruta.substring(
+                        0,
+                        indiceConsulta
+                    );
+            }
 
             Estadisticas.actualizarRuta(
                 id,
@@ -251,13 +265,14 @@ public class ManejadorCliente {
 
         return
             "<!DOCTYPE html>" +
-            "<html>" +
+            "<html lang='es'>" +
             "<head>" +
-            "<meta charset=\"UTF-8\">" +
+            "<meta charset='UTF-8'>" +
+            "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
             "<title>Error</title>" +
             "</head>" +
             "<body>" +
-            "<h1>404 - Pagina no encontrada</h1>" +
+            "<h1>404 - Página no encontrada</h1>" +
             "<p>" + mensaje + "</p>" +
             "<p>Hilo: " + nombreHilo + "</p>" +
             "</body>" +
@@ -316,30 +331,63 @@ public class ManejadorCliente {
                 .resolve(nombreArchivo)
                 .normalize();
 
+        String extension = "";
+
+        int punto =
+            nombreArchivo.lastIndexOf('.');
+
+        if (punto >= 0) {
+
+            extension =
+                nombreArchivo
+                    .substring(punto)
+                    .toLowerCase(Locale.ROOT);
+        }
+
+        String tipoContenido;
+
+        switch (extension) {
+
+            case ".png" ->
+                tipoContenido = "image/png";
+
+            case ".jpg", ".jpeg" ->
+                tipoContenido = "image/jpeg";
+
+            case ".webp" ->
+                tipoContenido = "image/webp";
+
+            default ->
+                tipoContenido = null;
+        }
+
         OutputStream salida =
             clienteSocket.getOutputStream();
 
         if (
             !archivo.startsWith(carpetaImagenes) ||
-            !Files.exists(archivo) ||
-            !nombreArchivo
-                .toLowerCase()
-                .endsWith(".png")
+            !Files.isRegularFile(archivo) ||
+            tipoContenido == null
         ) {
+
+            byte[] cuerpo =
+                "Imagen no encontrada".getBytes(
+                    StandardCharsets.UTF_8
+                );
 
             String respuesta =
                 "HTTP/1.1 404 Not Found\r\n" +
                 "Content-Type: text/plain; charset=UTF-8\r\n" +
-                "Content-Length: 21\r\n" +
-                "Connection: close\r\n" +
-                "\r\n" +
-                "Imagen no encontrada";
+                "Content-Length: " + cuerpo.length + "\r\n" +
+                "Connection: close\r\n\r\n";
 
             salida.write(
                 respuesta.getBytes(
                     StandardCharsets.UTF_8
                 )
             );
+
+            salida.write(cuerpo);
 
             salida.flush();
 
@@ -351,11 +399,9 @@ public class ManejadorCliente {
 
         String encabezados =
             "HTTP/1.1 200 OK\r\n" +
-            "Content-Type: image/png\r\n" +
-            "Content-Length: " +
-            imagen.length + "\r\n" +
-            "Connection: close\r\n" +
-            "\r\n";
+            "Content-Type: " + tipoContenido + "\r\n" +
+            "Content-Length: " + imagen.length + "\r\n" +
+            "Connection: close\r\n\r\n";
 
         salida.write(
             encabezados.getBytes(
