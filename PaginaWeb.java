@@ -1,358 +1,454 @@
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class PaginaWeb {
 
-    public static String generar(String pagina, String hilo) {
+    private static final List<Producto> PRODUCTOS = List.of(
+
+        new Producto(
+            Rutas.RAZER,
+            "Audífonos Razer",
+            "Consultar precio",
+            "Audifonos_Razer.webp",
+            "Audífonos para tus partidas, música y sesiones largas.",
+            "AUDIO",
+            "accesorios"
+        ),
+
+        new Producto(
+            Rutas.MIKU,
+            "Hatsune Miku",
+            "Consultar precio",
+            "Figura_Miku.png",
+            "Figura de colección para darle personalidad a tu espacio.",
+            "COLECCIÓN",
+            "coleccion"
+        ),
+
+        new Producto(
+            Rutas.GAREN,
+            "Garen Pingu",
+            "Consultar precio",
+            "Figura_Garen_Pingu.webp",
+            "Una figura coleccionable para los fans de League of Legends.",
+            "COLECCIÓN",
+            "coleccion"
+        ),
+
+        new Producto(
+            Rutas.LOGITECH_PRO,
+            "Logitech PRO",
+            "Consultar precio",
+            "Logitech_Pro.png",
+            "Periférico Logitech PRO para completar tu estación de juego.",
+            "GAMING",
+            "gaming"
+        ),
+
+        new Producto(
+            Rutas.LOGITECH_COMBO,
+            "Combo Logitech",
+            "Consultar precio",
+            "Logitech_Basico_Teclado.png",
+            "Teclado y mouse para trabajar, estudiar y utilizar todos los días.",
+            "OFICINA",
+            "accesorios"
+        ),
+
+        new Producto(
+            Rutas.TECLADO,
+            "Teclado mecánico",
+            "Q425.00",
+            "teclado.png",
+            "Teclado para programar, jugar y completar tu setup.",
+            "GAMING",
+            "gaming"
+        )
+    );
+
+    private static final List<Album> ALBUMS = List.of(
+
+        new Album(
+            Rutas.ALBUM_NOTHING,
+            "Nothing But the Best",
+            "Album_Nothingbutthebest.webp",
+            "Una referencia musical para acompañar el viaje."
+        ),
+
+        new Album(
+            Rutas.ALBUM_VOZ,
+            "La Voz de Oro",
+            "Album_Lavozdeoro.jpg",
+            "Una colección sonora que forma parte de Nexus UMG."
+        )
+    );
+
+    public static String generar(String ruta, String hilo) {
 
         String contenido;
 
-        if (pagina.equals("/") || pagina.equals("/productos")) {
+        if (ruta.equals(Rutas.INICIO) ||
+            ruta.equals(Rutas.PRODUCTOS)) {
 
-            String productos = String.join("\n",
+            contenido = inicio();
 
-                producto(
-                    "Audífonos Razer",
-                    "Consultar precio",
-                    "Audifonos_Razer.webp",
-                    "Audífonos para disfrutar tus partidas, música y sesiones largas.",
-                    "AUDIO"
-                ),
+        } else if (
+            ruta.equals(Rutas.TECNOLOGIA) ||
+            ruta.equals(Rutas.GAMING) ||
+            ruta.equals(Rutas.ACCESORIOS)
+        ) {
 
-                producto(
-                    "Hatsune Miku",
-                    "Consultar precio",
-                    "Figura_Miku.png",
-                    "Figura de colección para darle personalidad a tu espacio.",
-                    "COLECCIÓN"
-                ),
+            contenido = paginaCategoria(ruta);
 
-                producto(
-                    "Garen Pingu",
-                    "Consultar precio",
-                    "Figura_Garen_Pingu.webp",
-                    "Una figura coleccionable para los fans de League of Legends.",
-                    "COLECCIÓN"
-                ),
+        } else if (ruta.equals(Rutas.MUSICA)) {
 
-                producto(
-                    "Logitech PRO",
-                    "Consultar precio",
-                    "Logitech_Pro.png",
-                    "Periférico Logitech PRO para completar tu estación de juego.",
-                    "PERIFÉRICOS"
-                ),
+            contenido = paginaMusica();
 
-                producto(
-                    "Combo Logitech",
-                    "Consultar precio",
-                    "Logitech_Basico_Teclado.png",
-                    "Teclado y mouse para trabajar, estudiar y utilizar todos los días.",
-                    "OFICINA"
-                ),
+        } else if (ruta.equals(Rutas.SERVICIOS)) {
 
-                producto(
-                    "Teclado mecánico",
-                    "Q425.00",
-                    "teclado.png",
-                    "Teclado para programar, jugar y completar tu setup.",
-                    "GAMING"
-                )
+            contenido = paginaInformativa(
+                "Servicios",
+                "Una experiencia de atención cercana para acompañar tu próxima expedición."
             );
 
-            String albums = String.join("\n",
+        } else if (ruta.equals(Rutas.NOSOTROS)) {
 
-                album(
-                    "Nothing But the Best",
-                    "Album_Nothingbutthebest.webp",
-                    "Una referencia musical para acompañar el viaje."
-                ),
-
-                album(
-                    "La Voz de Oro",
-                    "Album_Lavozdeoro.jpg",
-                    "Una colección sonora que también forma parte de Nexus UMG."
-                )
+            contenido = paginaInformativa(
+                "Sobre Nexus UMG",
+                "Tecnología, gaming y cultura reunidos en un solo lugar."
             );
 
-            contenido = """
-                <section class='banner'>
+        } else if (ruta.equals(Rutas.SOLICITUDES)) {
 
-                    <div class='banner-contenido'>
+            contenido = paginaInformativa(
+                "Solicitudes HTTP",
+                "Solicitud atendida por el hilo: " + hilo
+            );
 
-                        <p class='banner-etiqueta'>
-                            NEXUS UMG · TECNOLOGÍA Y GAMING
-                        </p>
+        } else if (ruta.equals(Rutas.HILOS)) {
 
-                        <h1>
-                            Tecnología para otros mundos
-                        </h1>
+            contenido = paginaInformativa(
+                "Hilos del servidor",
+                "Solicitud atendida por el hilo: " + hilo
+            );
 
-                        <p class='banner-descripcion'>
-                            Tecnología, gaming y accesorios
-                            elegidos para acompañarte
-                            en cada expedición.
-                        </p>
+        } else if (ruta.equals(Rutas.CLIENTES)) {
 
-                        <a class='boton-banner' href='#productos'>
-                            Explorar tienda <span>→</span>
-                        </a>
-
-                    </div>
-
-                    <div class='banner-pie'>
-                        UNA NUEVA EXPEDICIÓN COMIENZA AQUÍ
-                    </div>
-
-                </section>
-
-                <section class='catalogo' id='productos'>
-
-                    <div class='encabezado-seccion'>
-
-                        <div>
-                            <p class='seccion-etiqueta'>
-                                EQUIPO SELECCIONADO
-                            </p>
-
-                            <h2>Selección de la expedición</h2>
-
-                            <p class='subtitulo-seccion'>
-                                Seis piezas para tu próxima aventura.
-                            </p>
-                        </div>
-
-                        <span class='contador-productos'>
-                            06 PRODUCTOS
-                        </span>
-
-                    </div>
-
-                    <div class='productos'>
-                        {{PRODUCTOS}}
-                    </div>
-
-                </section>
-
-                <section class='franja-promocional' id='gaming'>
-
-                    <div>
-
-                        <p class='seccion-etiqueta'>
-                            EQUIPO QUE VA CONTIGO
-                        </p>
-
-                        <h2>Encuentra tu próxima pieza</h2>
-
-                        <p>
-                            Herramientas para crear, jugar
-                            y explorar más lejos.
-                        </p>
-
-                    </div>
-
-                    <a href='#productos' class='enlace-promocional'>
-                        Explorar selección →
-                    </a>
-
-                </section>
-
-                <section class='archivo-sonoro' id='musica'>
-
-                    <div class='encabezado-seccion'>
-
-                        <div>
-                            <p class='seccion-etiqueta'>
-                                OTRAS FORMAS DE EXPLORAR
-                            </p>
-
-                            <h2>Archivo sonoro</h2>
-
-                            <p class='subtitulo-seccion'>
-                                Álbumes que también forman parte
-                                de la identidad de Nexus UMG.
-                            </p>
-                        </div>
-
-                        <span class='contador-productos'>
-                            02 REFERENCIAS
-                        </span>
-
-                    </div>
-
-                    <div class='albums'>
-                        {{ALBUMS}}
-                    </div>
-
-                </section>
-
-                <section class='beneficios' id='servicios'>
-
-                    <div class='beneficio'>
-                        <span class='beneficio-icono'>◇</span>
-
-                        <div>
-                            <strong>Selección cuidada</strong>
-                            <p>Productos para tu día a día.</p>
-                        </div>
-                    </div>
-
-                    <div class='beneficio'>
-                        <span class='beneficio-icono'>⌂</span>
-
-                        <div>
-                            <strong>Atención cercana</strong>
-                            <p>Estamos para ayudarte.</p>
-                        </div>
-                    </div>
-
-                    <div class='beneficio'>
-                        <span class='beneficio-icono'>✧</span>
-
-                        <div>
-                            <strong>Tu próxima aventura</strong>
-                            <p>Empieza con el equipo adecuado.</p>
-                        </div>
-                    </div>
-
-                </section>
-                """;
-
-            contenido = contenido
-                .replace("{{PRODUCTOS}}", productos)
-                .replace("{{ALBUMS}}", albums);
-
-        } else if (pagina.equals("/solicitudes")) {
-
-            contenido = """
-                <section class='pagina-interna'>
-
-                    <p class='seccion-etiqueta'>SISTEMA</p>
-
-                    <h1>Solicitudes HTTP</h1>
-
-                    <p>
-                        Aquí se mostrarán las solicitudes
-                        recibidas por el servidor.
-                    </p>
-
-                    <div class='panel-interno'>
-                        <h3>Solicitud actual</h3>
-                        <p>GET /solicitudes</p>
-                        <p>Atendida por: %s</p>
-                    </div>
-
-                </section>
-                """.formatted(hilo);
-
-        } else if (pagina.equals("/hilos")) {
-
-            contenido = """
-                <section class='pagina-interna'>
-
-                    <p class='seccion-etiqueta'>SISTEMA</p>
-
-                    <h1>Hilos</h1>
-
-                    <p>
-                        Información sobre los hilos
-                        de ejecución del servidor.
-                    </p>
-
-                    <div class='panel-interno'>
-                        <h3>Thread Pool</h3>
-                        <p>Hilos configurados: 10</p>
-                        <p>Solicitud atendida por: %s</p>
-                    </div>
-
-                </section>
-                """.formatted(hilo);
-
-        } else if (pagina.equals("/clientes")) {
-
-            contenido = """
-                <section class='pagina-interna'>
-
-                    <p class='seccion-etiqueta'>SISTEMA</p>
-
-                    <h1>Clientes</h1>
-
-                    <p>
-                        Información de los clientes
-                        conectados al servidor.
-                    </p>
-
-                    <div class='panel-interno'>
-                        <h3>Estado</h3>
-                        <p>Servidor preparado para recibir clientes.</p>
-                    </div>
-
-                </section>
-                """;
-
-        } else if (pagina.startsWith("/producto/")) {
-
-            contenido = """
-                <section class='pagina-interna'>
-
-                    <p class='seccion-etiqueta'>NEXUS UMG</p>
-
-                    <h1>Detalle del producto</h1>
-
-                    <p>
-                        La ficha individual estará disponible
-                        en una siguiente versión.
-                    </p>
-
-                    <a class='boton-banner' href='/productos'>
-                        Volver a la tienda →
-                    </a>
-
-                </section>
-                """;
+            contenido = paginaInformativa(
+                "Clientes",
+                "El servidor está preparado para recibir clientes."
+            );
 
         } else {
 
-            contenido = """
-                <section class='pagina-interna'>
+            Producto producto = buscarProducto(ruta);
+            Album album = buscarAlbum(ruta);
 
-                    <p class='seccion-etiqueta'>NEXUS UMG</p>
-
-                    <h1>Página no encontrada</h1>
-
-                    <p>El recurso solicitado no está disponible.</p>
-
-                    <a class='boton-banner' href='/'>
-                        Volver al inicio →
-                    </a>
-
-                </section>
-                """;
+            if (producto != null) {
+                contenido = detalleProducto(producto);
+            } else if (album != null) {
+                contenido = detalleAlbum(album);
+            } else {
+                contenido = paginaInformativa(
+                    "Página no encontrada",
+                    "El recurso solicitado no está disponible."
+                );
+            }
         }
+
+        return plantilla(contenido);
+    }
+
+    private static String inicio() {
+
+        String productos = PRODUCTOS.stream()
+            .map(PaginaWeb::tarjetaProducto)
+            .collect(Collectors.joining("\n"));
+
+        String albums = ALBUMS.stream()
+            .map(PaginaWeb::tarjetaAlbum)
+            .collect(Collectors.joining("\n"));
+
+        return """
+            <section class="banner">
+                <div class="banner-contenido">
+                    <p class="etiqueta">NEXUS UMG · TECNOLOGÍA Y GAMING</p>
+                    <h1>Tecnología para otros mundos</h1>
+                    <p>
+                        Tecnología, gaming, accesorios y música
+                        para acompañarte en cada expedición.
+                    </p>
+                    <a class="boton" href="/tecnologia">Explorar tienda →</a>
+                </div>
+            </section>
+
+            <section class="seccion">
+                <div class="encabezado-seccion">
+                    <div>
+                        <p class="etiqueta">EQUIPO SELECCIONADO</p>
+                        <h2>Selección de la expedición</h2>
+                        <p>Explora nuestro stock actual.</p>
+                    </div>
+                    <span class="contador">06 PRODUCTOS</span>
+                </div>
+
+                <div class="productos">
+                    %s
+                </div>
+            </section>
+
+            <section class="franja">
+                <div>
+                    <p class="etiqueta">EQUIPO QUE VA CONTIGO</p>
+                    <h2>Tu próxima aventura comienza aquí</h2>
+                </div>
+                <a class="enlace" href="/gaming">Explorar gaming →</a>
+            </section>
+
+            <section class="seccion">
+                <div class="encabezado-seccion">
+                    <div>
+                        <p class="etiqueta">OTRAS FORMAS DE EXPLORAR</p>
+                        <h2>Archivo sonoro</h2>
+                        <p>Álbumes que forman parte de la identidad de Nexus UMG.</p>
+                    </div>
+                    <a class="enlace" href="/musica">Ver música →</a>
+                </div>
+
+                <div class="albums">
+                    %s
+                </div>
+            </section>
+            """.formatted(productos, albums);
+    }
+
+    private static String paginaCategoria(String ruta) {
+
+        List<Producto> encontrados;
+
+        String titulo;
+        String descripcion;
+
+        if (ruta.equals(Rutas.GAMING)) {
+
+            titulo = "Gaming";
+            descripcion = "Equipo para jugar y completar tu setup.";
+
+            encontrados = PRODUCTOS.stream()
+                .filter(p -> p.grupo.equals("gaming"))
+                .collect(Collectors.toList());
+
+        } else if (ruta.equals(Rutas.ACCESORIOS)) {
+
+            titulo = "Accesorios";
+            descripcion = "Accesorios para trabajar y disfrutar cada día.";
+
+            encontrados = PRODUCTOS.stream()
+                .filter(p -> p.grupo.equals("accesorios"))
+                .collect(Collectors.toList());
+
+        } else {
+
+            titulo = "Tecnología";
+            descripcion = "Explora el catálogo completo de Nexus UMG.";
+
+            encontrados = PRODUCTOS;
+        }
+
+        String tarjetas = encontrados.stream()
+            .map(PaginaWeb::tarjetaProducto)
+            .collect(Collectors.joining("\n"));
+
+        return """
+            <section class="seccion">
+                <p class="etiqueta">NEXUS UMG</p>
+                <h1>%s</h1>
+                <p>%s</p>
+                <div class="productos">%s</div>
+            </section>
+            """.formatted(titulo, descripcion, tarjetas);
+    }
+
+    private static String paginaMusica() {
+
+        String tarjetas = ALBUMS.stream()
+            .map(PaginaWeb::tarjetaAlbum)
+            .collect(Collectors.joining("\n"));
+
+        return """
+            <section class="seccion">
+                <p class="etiqueta">ARCHIVO SONORO</p>
+                <h1>La música de la expedición</h1>
+                <p>Descubre nuestras referencias musicales.</p>
+                <div class="albums">%s</div>
+            </section>
+            """.formatted(tarjetas);
+    }
+
+    private static String tarjetaProducto(Producto producto) {
+
+        return """
+            <article class="producto">
+                <a class="producto-imagen" href="%s">
+                    <span class="etiqueta-producto">%s</span>
+                    <img src="/imagenes/%s" alt="%s" loading="lazy">
+                </a>
+
+                <div class="producto-info">
+                    <div class="producto-titulo">
+                        <h3>%s</h3>
+                        <strong>%s</strong>
+                    </div>
+
+                    <p class="descripcion">%s</p>
+
+                    <a class="boton-producto" href="%s">
+                        Ver producto →
+                    </a>
+                </div>
+            </article>
+            """.formatted(
+                producto.ruta,
+                producto.categoria.toUpperCase(),
+                producto.imagen,
+                producto.nombre,
+                producto.nombre,
+                producto.precio,
+                producto.descripcion,
+                producto.ruta
+            );
+    }
+
+    private static String tarjetaAlbum(Album album) {
+
+        return """
+            <article class="album">
+                <a class="album-imagen" href="%s">
+                    <img src="/imagenes/%s" alt="%s" loading="lazy">
+                </a>
+
+                <div class="album-info">
+                    <p class="etiqueta">REFERENCIA MUSICAL</p>
+                    <h3>%s</h3>
+                    <p>%s</p>
+                    <a class="enlace" href="%s">Ver álbum →</a>
+                </div>
+            </article>
+            """.formatted(
+                album.ruta,
+                album.imagen,
+                album.nombre,
+                album.nombre,
+                album.descripcion,
+                album.ruta
+            );
+    }
+
+    private static String detalleProducto(Producto producto) {
+
+        return """
+            <section class="detalle">
+                <a class="enlace" href="/productos">← Volver al catálogo</a>
+
+                <div class="detalle-contenido">
+                    <div class="detalle-imagen">
+                        <img src="/imagenes/%s" alt="%s">
+                    </div>
+
+                    <div>
+                        <p class="etiqueta">%s</p>
+                        <h1>%s</h1>
+                        <h2>%s</h2>
+                        <p>%s</p>
+                        <a class="boton" href="/servicios">Consultar disponibilidad →</a>
+                    </div>
+                </div>
+            </section>
+            """.formatted(
+                producto.imagen,
+                producto.nombre,
+                producto.categoria,
+                producto.nombre,
+                producto.precio,
+                producto.descripcion
+            );
+    }
+
+    private static String detalleAlbum(Album album) {
+
+        return """
+            <section class="detalle">
+                <a class="enlace" href="/musica">← Volver al archivo sonoro</a>
+
+                <div class="detalle-contenido">
+                    <div class="detalle-imagen">
+                        <img src="/imagenes/%s" alt="%s">
+                    </div>
+
+                    <div>
+                        <p class="etiqueta">ARCHIVO SONORO</p>
+                        <h1>%s</h1>
+                        <p>%s</p>
+                        <a class="boton" href="/musica">Explorar álbumes →</a>
+                    </div>
+                </div>
+            </section>
+            """.formatted(
+                album.imagen,
+                album.nombre,
+                album.nombre,
+                album.descripcion
+            );
+    }
+
+    private static String paginaInformativa(
+        String titulo,
+        String descripcion
+    ) {
+
+        return """
+            <section class="seccion informativa">
+                <p class="etiqueta">NEXUS UMG</p>
+                <h1>%s</h1>
+                <p>%s</p>
+                <a class="boton" href="/">Volver al inicio →</a>
+            </section>
+            """.formatted(titulo, descripcion);
+    }
+
+    private static Producto buscarProducto(String ruta) {
+
+        return PRODUCTOS.stream()
+            .filter(p -> p.ruta.equals(ruta))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private static Album buscarAlbum(String ruta) {
+
+        return ALBUMS.stream()
+            .filter(a -> a.ruta.equals(ruta))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private static String plantilla(String contenido) {
 
         String html = """
             <!DOCTYPE html>
-            <html lang='es'>
-
+            <html lang="es">
             <head>
-
-                <meta charset='UTF-8'>
-
-                <meta name='viewport'
-                      content='width=device-width, initial-scale=1.0'>
-
-                <meta name='theme-color' content='#10171d'>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <meta name="theme-color" content="#10171d">
 
                 <title>Nexus UMG | Tecnología para otros mundos</title>
 
-                <link rel='preconnect'
-                      href='https://fonts.googleapis.com'>
-
-                <link rel='preconnect'
-                      href='https://fonts.gstatic.com' crossorigin>
-
-                <link href='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap'
-                      rel='stylesheet'>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
                 <style>
-
                     * {
                         box-sizing: border-box;
                     }
@@ -366,11 +462,6 @@ public class PaginaWeb {
                         --muted: #aab0b5;
                     }
 
-                    html {
-                        scroll-behavior: smooth;
-                        scroll-padding-top: 20px;
-                    }
-
                     body {
                         margin: 0;
                         background: var(--noche);
@@ -381,173 +472,114 @@ public class PaginaWeb {
 
                     a {
                         color: inherit;
+                        text-decoration: none;
                     }
-
-                    /* ENCABEZADO */
 
                     .site-header {
                         display: flex;
                         align-items: center;
                         justify-content: space-between;
-                        gap: 24px;
-                        padding: 16px clamp(20px, 5vw, 72px);
+                        flex-wrap: wrap;
+                        gap: 18px;
+                        padding: 18px clamp(20px, 5vw, 72px);
                         background: var(--profundo);
-                        border-bottom: 1px solid rgba(201,164,106,.3);
+                        border-bottom: 1px solid #514532;
                     }
 
                     .marca {
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 10px;
-                        text-decoration: none;
-                        white-space: nowrap;
-                    }
-
-                    .marca-simbolo {
-                        color: var(--oro);
-                        font-size: 30px;
-                    }
-
-                    .marca-texto {
-                        color: #f8f1e7;
                         font-family: 'Cormorant Garamond', Georgia, serif;
                         font-size: 30px;
-                        letter-spacing: 1.4px;
-                        line-height: 1;
+                        letter-spacing: 1.5px;
                     }
 
-                    .marca-texto span {
+                    .marca span {
                         color: var(--oro);
                     }
 
                     .nav-links {
                         display: flex;
-                        align-items: center;
-                        gap: clamp(12px, 2vw, 28px);
+                        gap: 22px;
+                        flex-wrap: wrap;
                     }
 
-                    .nav-links a {
-                        color: #d2d0cd;
+                    .nav-links a,
+                    .enlace {
+                        color: #ded6c9;
                         font-size: 12px;
-                        text-decoration: none;
-                        white-space: nowrap;
                     }
 
-                    .nav-links a:hover {
+                    a:hover {
                         color: var(--oro);
                     }
 
-                    .header-accion {
-                        flex-shrink: 0;
-                        padding: 9px 13px;
-                        border: 1px solid var(--oro);
-                        color: var(--marfil);
-                        font-size: 11px;
-                        text-decoration: none;
-                    }
-
-                    .header-accion:hover {
-                        background: var(--oro);
-                        color: var(--profundo);
-                    }
-
-                    /* BANNER */
-
                     .banner {
-                        min-height: clamp(430px, 49vw, 630px);
                         display: flex;
                         align-items: center;
-                        position: relative;
+                        min-height: clamp(400px, 48vw, 620px);
                         padding: clamp(30px, 7vw, 100px);
-                        overflow: hidden;
                         background-image:
-                            linear-gradient(
-                                90deg,
-                                rgba(8,13,17,.93),
-                                rgba(8,13,17,.65) 42%,
-                                rgba(8,13,17,.12)
-                            ),
-                            linear-gradient(
-                                0deg,
-                                rgba(8,13,17,.5),
-                                transparent 50%
-                            ),
+                            linear-gradient(90deg, rgba(8,13,17,.93), rgba(8,13,17,.58) 55%, rgba(8,13,17,.16)),
                             url('/imagenes/encabezado.jpeg');
-                        background-position: center, center, center;
                         background-size: cover;
-                        border-bottom: 1px solid rgba(201,164,106,.3);
+                        background-position: center;
+                        border-bottom: 1px solid #514532;
                     }
 
                     .banner-contenido {
                         max-width: 580px;
                     }
 
-                    .banner-etiqueta,
-                    .seccion-etiqueta {
-                        margin: 0 0 12px;
-                        color: var(--oro);
-                        font-size: 10px;
-                        font-weight: 600;
-                        letter-spacing: 2px;
-                    }
-
                     .banner h1,
-                    .encabezado-seccion h2,
-                    .franja-promocional h2,
-                    .pagina-interna h1 {
+                    h1,
+                    h2,
+                    .album h3 {
                         font-family: 'Cormorant Garamond', Georgia, serif;
                         font-weight: 500;
                     }
 
                     .banner h1 {
                         margin: 0;
-                        color: #f6eee2;
-                        font-size: clamp(44px, 6vw, 76px);
-                        line-height: .98;
+                        font-size: clamp(46px, 7vw, 78px);
+                        line-height: 1;
+                        color: #f7eee0;
                     }
 
-                    .banner-descripcion {
-                        max-width: 420px;
-                        margin: 22px 0 26px;
-                        color: #ddd7ce;
+                    .banner p:not(.etiqueta) {
+                        max-width: 440px;
+                        margin: 22px 0;
+                        color: #e1d9cd;
                         font-size: 14px;
                     }
 
-                    .boton-banner {
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 20px;
-                        padding: 12px 18px;
-                        border: 1px solid var(--marfil);
-                        background: var(--marfil);
-                        color: #171b1e;
-                        font-size: 12px;
+                    .etiqueta {
+                        color: var(--oro);
+                        font-size: 10px;
                         font-weight: 600;
-                        text-decoration: none;
-                        transition: .2s;
+                        letter-spacing: 2px;
+                        text-transform: uppercase;
                     }
 
-                    .boton-banner:hover {
+                    .boton,
+                    .boton-producto {
+                        display: inline-block;
+                        padding: 11px 15px;
+                        border: 1px solid var(--oro);
+                        background: var(--oro);
+                        color: #171b1e;
+                        font-size: 11px;
+                        font-weight: 600;
+                    }
+
+                    .boton:hover,
+                    .boton-producto:hover {
                         background: transparent;
                         color: var(--marfil);
                     }
 
-                    .banner-pie {
-                        position: absolute;
-                        right: 25px;
-                        bottom: 18px;
-                        color: #e0d8cc;
-                        font-size: 9px;
-                        letter-spacing: 1.5px;
-                    }
-
-                    /* CATÁLOGO */
-
-                    .catalogo,
-                    .archivo-sonoro {
-                        max-width: 1550px;
-                        margin: 0 auto;
-                        padding: 50px clamp(20px, 5vw, 72px) 60px;
+                    .seccion {
+                        max-width: 1500px;
+                        margin: auto;
+                        padding: 50px clamp(20px, 5vw, 72px);
                     }
 
                     .encabezado-seccion {
@@ -558,70 +590,55 @@ public class PaginaWeb {
                         margin-bottom: 25px;
                     }
 
-                    .encabezado-seccion h2 {
-                        margin: 0;
+                    h1,
+                    h2 {
+                        margin-top: 0;
                         color: #f5ecdf;
-                        font-size: clamp(32px, 4vw, 47px);
-                        line-height: 1.05;
                     }
 
-                    .subtitulo-seccion {
-                        margin: 9px 0 0;
-                        color: var(--muted);
-                        font-size: 12px;
+                    h2 {
+                        font-size: clamp(32px, 4vw, 46px);
+                        line-height: 1.1;
+                        margin-bottom: 8px;
                     }
 
-                    .contador-productos {
-                        color: #d2b783;
+                    .contador {
+                        color: var(--oro);
                         font-size: 10px;
-                        letter-spacing: 1.3px;
-                        white-space: nowrap;
+                        letter-spacing: 1px;
                     }
 
                     .productos {
                         display: grid;
                         grid-template-columns: repeat(3, minmax(0, 1fr));
                         gap: 20px;
+                        margin-top: 25px;
                     }
 
                     .producto {
-                        min-width: 0;
                         display: flex;
                         flex-direction: column;
+                        min-width: 0;
                         overflow: hidden;
-                        border: 1px solid rgba(201,164,106,.27);
                         background: #eee5d7;
                         color: #202328;
-                        transition: transform .2s, box-shadow .2s;
-                    }
-
-                    .producto:hover {
-                        transform: translateY(-4px);
-                        box-shadow: 0 12px 25px rgba(0,0,0,.25);
+                        border: 1px solid #b7a78e;
                     }
 
                     .producto-imagen {
-                        height: 230px;
+                        height: 235px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         position: relative;
                         padding: 18px;
-                        overflow: hidden;
-                        background:
-                            radial-gradient(
-                                ellipse at center,
-                                #fffaf1,
-                                #e5d9c7 75%,
-                                #c9b99e
-                            );
+                        background: radial-gradient(ellipse, #fffaf1, #e5d9c7 75%, #c9b99e);
                     }
 
                     .producto-imagen img {
                         width: 100%;
                         height: 100%;
                         object-fit: contain;
-                        display: block;
                     }
 
                     .etiqueta-producto {
@@ -632,7 +649,6 @@ public class PaginaWeb {
                         background: #151d23;
                         color: var(--marfil);
                         font-size: 8px;
-                        font-weight: 600;
                         letter-spacing: 1px;
                     }
 
@@ -643,88 +659,48 @@ public class PaginaWeb {
                         padding: 16px;
                     }
 
-                    .producto-nombre-precio {
+                    .producto-titulo {
                         display: flex;
                         justify-content: space-between;
-                        align-items: flex-start;
                         gap: 10px;
                     }
 
-                    .producto-nombre-precio h3 {
+                    .producto h3 {
                         margin: 0;
                         font-size: 14px;
-                        font-weight: 600;
                     }
 
-                    .producto-nombre-precio strong {
-                        max-width: 50%;
-                        color: #171d22;
+                    .producto-titulo strong {
                         font-size: 11px;
                         text-align: right;
                     }
 
                     .descripcion {
-                        min-height: 48px;
-                        margin: 12px 0 18px;
+                        min-height: 50px;
                         color: #64615d;
                         font-size: 11px;
                     }
 
-                    .producto button {
-                        width: 100%;
+                    .boton-producto {
                         margin-top: auto;
-                        padding: 11px;
-                        border: 1px solid #171d22;
+                        text-align: center;
                         background: #171d22;
-                        color: #f5eee4;
-                        font-family: inherit;
-                        font-size: 11px;
-                        cursor: pointer;
-                    }
-
-                    .producto button:hover {
-                        background: transparent;
-                        color: #171d22;
-                    }
-
-                    /* FRANJA GAMING */
-
-                    .franja-promocional {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        gap: 25px;
-                        padding: 40px clamp(20px, 7vw, 110px);
-                        border-top: 1px solid rgba(201,164,106,.25);
-                        border-bottom: 1px solid rgba(201,164,106,.25);
-                        background: linear-gradient(100deg, #172128, #10171d);
-                    }
-
-                    .franja-promocional h2 {
-                        margin: 0;
-                        color: #f5ecdf;
-                        font-size: clamp(30px, 4vw, 42px);
-                        line-height: 1.05;
-                    }
-
-                    .franja-promocional p:not(.seccion-etiqueta) {
-                        color: var(--muted);
-                        font-size: 12px;
-                    }
-
-                    .enlace-promocional {
-                        flex-shrink: 0;
                         color: var(--marfil);
-                        font-size: 12px;
-                        text-decoration: none;
-                        border-bottom: 1px solid var(--oro);
-                        padding: 9px 0;
+                        border-color: #171d22;
                     }
 
-                    /* MÚSICA */
+                    .franja {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 22px;
+                        padding: 35px clamp(20px, 7vw, 110px);
+                        background: #172128;
+                        border-block: 1px solid #514532;
+                    }
 
-                    .archivo-sonoro {
-                        border-top: 1px solid rgba(201,164,106,.2);
+                    .franja h2 {
+                        margin-bottom: 0;
                     }
 
                     .albums {
@@ -735,166 +711,109 @@ public class PaginaWeb {
 
                     .album {
                         display: grid;
-                        grid-template-columns: minmax(110px, 180px) minmax(0, 1fr);
+                        grid-template-columns: minmax(100px, 170px) minmax(0, 1fr);
                         align-items: center;
-                        gap: 20px;
+                        gap: 18px;
                         padding: 16px;
                         background: #151e24;
-                        border: 1px solid rgba(201,164,106,.24);
+                        border: 1px solid #514532;
                     }
 
                     .album-imagen {
                         aspect-ratio: 1;
+                        display: block;
                         overflow: hidden;
                         background: #0b0f12;
                     }
 
                     .album-imagen img {
-                        display: block;
                         width: 100%;
                         height: 100%;
                         object-fit: cover;
                     }
 
-                    .album-etiqueta {
-                        margin: 0 0 8px;
-                        color: var(--oro);
-                        font-size: 9px;
-                        letter-spacing: 1.4px;
-                    }
-
                     .album h3 {
                         margin: 0 0 8px;
-                        color: #f2e9dc;
-                        font-family: 'Cormorant Garamond', Georgia, serif;
                         font-size: clamp(24px, 3vw, 34px);
                         line-height: 1.05;
                     }
 
-                    .album-descripcion {
-                        margin: 0;
+                    .album p:not(.etiqueta) {
                         color: var(--muted);
                         font-size: 11px;
                     }
 
-                    /* BENEFICIOS Y PIE */
+                    .detalle {
+                        max-width: 1250px;
+                        min-height: 65vh;
+                        margin: auto;
+                        padding: 50px clamp(20px, 5vw, 72px);
+                    }
 
-                    .beneficios {
+                    .detalle-contenido {
                         display: grid;
-                        grid-template-columns: repeat(3, minmax(0, 1fr));
-                        gap: 25px;
-                        padding: 28px clamp(20px, 7vw, 110px);
-                        border-top: 1px solid rgba(201,164,106,.2);
-                        border-bottom: 1px solid rgba(201,164,106,.2);
-                    }
-
-                    .beneficio {
-                        display: flex;
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
                         align-items: center;
-                        gap: 14px;
+                        gap: 45px;
+                        margin-top: 25px;
                     }
 
-                    .beneficio-icono {
-                        color: var(--oro);
-                        font-size: 27px;
+                    .detalle-imagen {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 320px;
+                        padding: 25px;
+                        background: radial-gradient(ellipse, #fffaf1, #e5d9c7 75%, #c9b99e);
                     }
 
-                    .beneficio strong {
-                        color: var(--marfil);
-                        font-family: 'Cormorant Garamond', Georgia, serif;
-                        font-size: 19px;
+                    .detalle-imagen img {
+                        display: block;
+                        max-width: 100%;
+                        max-height: 420px;
+                        object-fit: contain;
                     }
 
-                    .beneficio p {
-                        margin: 2px 0 0;
+                    .detalle h1 {
+                        font-size: clamp(38px, 5vw, 60px);
+                        margin-bottom: 10px;
+                    }
+
+                    .detalle h2 {
+                        font-family: 'Inter', Arial, sans-serif;
+                        font-size: 18px;
+                    }
+
+                    .detalle p:not(.etiqueta) {
                         color: var(--muted);
-                        font-size: 10px;
+                    }
+
+                    .informativa {
+                        min-height: 65vh;
                     }
 
                     .site-footer {
                         display: flex;
+                        flex-wrap: wrap;
                         justify-content: space-between;
-                        gap: 28px;
+                        gap: 26px;
                         padding: 30px clamp(20px, 5vw, 72px);
                         background: var(--profundo);
+                        border-top: 1px solid #514532;
                     }
 
-                    .footer-marca {
-                        max-width: 300px;
-                    }
-
-                    .footer-marca p {
+                    .site-footer p,
+                    .site-footer a:not(.marca) {
                         color: var(--muted);
                         font-size: 11px;
                     }
 
-                    .footer-columna strong {
-                        color: #e8d7bc;
-                        font-size: 11px;
-                    }
-
-                    .footer-columna a {
+                    .site-footer a {
                         display: block;
                         margin-top: 7px;
-                        color: #9da4a8;
-                        font-size: 10px;
-                        text-decoration: none;
                     }
 
-                    .footer-columna a:hover {
-                        color: var(--oro);
-                    }
-
-                    /* PÁGINAS INTERNAS */
-
-                    .pagina-interna {
-                        min-height: 65vh;
-                        max-width: 1100px;
-                        margin: 0 auto;
-                        padding: 70px 25px;
-                    }
-
-                    .pagina-interna h1 {
-                        margin: 0 0 10px;
-                        font-size: clamp(38px, 5vw, 58px);
-                    }
-
-                    .pagina-interna > p:not(.seccion-etiqueta) {
-                        color: var(--muted);
-                    }
-
-                    .panel-interno {
-                        margin-top: 24px;
-                        padding: 24px;
-                        background: #171f25;
-                        border: 1px solid rgba(201,164,106,.25);
-                    }
-
-                    .panel-interno h3 {
-                        margin-top: 0;
-                        color: var(--marfil);
-                    }
-
-                    .panel-interno p {
-                        color: var(--muted);
-                    }
-
-                    /* TABLET */
-
-                    @media (max-width: 1000px) {
-
-                        .site-header {
-                            flex-wrap: wrap;
-                        }
-
-                        .nav-links {
-                            order: 3;
-                            width: 100%;
-                            justify-content: flex-start;
-                            overflow-x: auto;
-                            padding: 5px 0;
-                        }
-
+                    @media (max-width: 900px) {
                         .productos {
                             grid-template-columns: repeat(2, minmax(0, 1fr));
                         }
@@ -902,60 +821,32 @@ public class PaginaWeb {
                         .albums {
                             grid-template-columns: 1fr;
                         }
-
-                        .beneficios {
-                            grid-template-columns: 1fr;
-                        }
                     }
 
-                    /* MÓVIL */
-
                     @media (max-width: 600px) {
-
                         .site-header {
-                            gap: 14px;
-                            padding: 15px 18px;
-                        }
-
-                        .marca-texto {
-                            font-size: 26px;
+                            padding: 16px 18px;
                         }
 
                         .nav-links {
-                            gap: 18px;
+                            width: 100%;
+                            gap: 16px;
+                            overflow-x: auto;
+                            flex-wrap: nowrap;
                         }
 
                         .nav-links a {
-                            font-size: 11px;
-                        }
-
-                        .header-accion {
-                            display: none;
+                            white-space: nowrap;
                         }
 
                         .banner {
-                            min-height: 440px;
-                            padding: 35px 24px;
-                            background-position: center, center, 58% center;
+                            min-height: 420px;
+                            padding: 35px 22px;
+                            background-position: center;
                         }
 
-                        .banner h1 {
-                            font-size: clamp(42px, 10vw, 58px);
-                        }
-
-                        .banner-descripcion {
-                            font-size: 13px;
-                        }
-
-                        .catalogo,
-                        .archivo-sonoro {
-                            padding: 36px 18px 42px;
-                        }
-
-                        .encabezado-seccion {
-                            align-items: flex-start;
-                            flex-direction: column;
-                            gap: 10px;
+                        .seccion {
+                            padding: 35px 18px;
                         }
 
                         .productos {
@@ -964,7 +855,7 @@ public class PaginaWeb {
                         }
 
                         .producto-imagen {
-                            height: 170px;
+                            height: 165px;
                             padding: 10px;
                         }
 
@@ -972,24 +863,22 @@ public class PaginaWeb {
                             padding: 12px;
                         }
 
-                        .producto-nombre-precio {
+                        .producto-titulo {
                             flex-direction: column;
-                            gap: 6px;
+                            gap: 5px;
                         }
 
-                        .producto-nombre-precio strong {
-                            max-width: 100%;
+                        .producto-titulo strong {
                             text-align: left;
                         }
 
                         .descripcion {
-                            min-height: 65px;
+                            min-height: 78px;
                         }
 
-                        .franja-promocional {
+                        .franja {
                             align-items: flex-start;
                             flex-direction: column;
-                            padding: 32px 22px;
                         }
 
                         .album {
@@ -998,17 +887,21 @@ public class PaginaWeb {
                             padding: 12px;
                         }
 
-                        .album h3 {
-                            font-size: 24px;
+                        .detalle {
+                            padding: 35px 18px;
                         }
 
-                        .site-footer {
-                            flex-wrap: wrap;
+                        .detalle-contenido {
+                            grid-template-columns: 1fr;
+                            gap: 25px;
+                        }
+
+                        .detalle-imagen {
+                            min-height: 250px;
                         }
                     }
 
                     @media (max-width: 380px) {
-
                         .productos {
                             grid-template-columns: 1fr;
                         }
@@ -1016,116 +909,52 @@ public class PaginaWeb {
                         .producto-imagen {
                             height: 230px;
                         }
-
-                        .producto-nombre-precio {
-                            flex-direction: row;
-                        }
-
-                        .producto-nombre-precio strong {
-                            text-align: right;
-                        }
-
-                        .descripcion {
-                            min-height: 0;
-                        }
-
-                        .album {
-                            grid-template-columns: 85px minmax(0, 1fr);
-                        }
-
-                        .site-footer {
-                            display: grid;
-                            grid-template-columns: repeat(2, minmax(0, 1fr));
-                        }
-
-                        .footer-marca {
-                            grid-column: 1 / -1;
-                        }
                     }
-
                 </style>
-
             </head>
 
             <body>
+                <header class="site-header">
+                    <a class="marca" href="/">NEXUS <span>UMG</span></a>
 
-                <header class='site-header'>
-
-                    <a class='marca' href='/'>
-                        <span class='marca-simbolo'>✧</span>
-
-                        <span class='marca-texto'>
-                            NEXUS <span>UMG</span>
-                        </span>
-                    </a>
-
-                    <nav class='nav-links'>
-
-                        <a href='/'>Inicio</a>
-                        <a href='/productos#productos'>Tecnología</a>
-                        <a href='/productos#gaming'>Gaming</a>
-                        <a href='/productos#productos'>Accesorios</a>
-                        <a href='/productos#musica'>Archivo sonoro</a>
-
+                    <nav class="nav-links">
+                        <a href="/">Inicio</a>
+                        <a href="/tecnologia">Tecnología</a>
+                        <a href="/gaming">Gaming</a>
+                        <a href="/accesorios">Accesorios</a>
+                        <a href="/musica">Archivo sonoro</a>
                     </nav>
-
-                    <a class='header-accion' href='/productos#productos'>
-                        Explorar tienda ↗
-                    </a>
-
                 </header>
 
                 <main>
                     {{CONTENIDO}}
                 </main>
 
-                <footer class='site-footer'>
-
-                    <div class='footer-marca'>
-
-                        <a class='marca' href='/'>
-                            <span class='marca-texto'>
-                                NEXUS <span>UMG</span>
-                            </span>
-                        </a>
-
-                        <p>
-                            Tecnología elegida con intención.
-                            Hecho para tu próxima expedición.
-                        </p>
-
+                <footer class="site-footer">
+                    <div>
+                        <a class="marca" href="/">NEXUS <span>UMG</span></a>
+                        <p>Tecnología elegida con intención.</p>
                     </div>
 
-                    <div class='footer-columna'>
-
+                    <div>
                         <strong>Tienda</strong>
-
-                        <a href='/'>Inicio</a>
-                        <a href='/productos#productos'>Productos</a>
-                        <a href='/productos#gaming'>Gaming</a>
-
+                        <a href="/">Inicio</a>
+                        <a href="/productos">Productos</a>
                     </div>
 
-                    <div class='footer-columna'>
-
+                    <div>
                         <strong>Explora</strong>
-
-                        <a href='/productos#musica'>Archivo sonoro</a>
-                        <a href='/productos#servicios'>Servicios</a>
-
+                        <a href="/gaming">Gaming</a>
+                        <a href="/accesorios">Accesorios</a>
+                        <a href="/musica">Archivo sonoro</a>
                     </div>
 
-                    <div class='footer-columna'>
-
+                    <div>
                         <strong>Nexus UMG</strong>
-
-                        <a href='/'>Sobre la tienda</a>
-                        <a href='/productos'>Catálogo</a>
-
+                        <a href="/nosotros">Sobre nosotros</a>
+                        <a href="/servicios">Servicios</a>
                     </div>
-
                 </footer>
-
             </body>
             </html>
             """;
@@ -1133,89 +962,22 @@ public class PaginaWeb {
         return html.replace("{{CONTENIDO}}", contenido);
     }
 
-    private static String producto(
+    private record Producto(
+        String ruta,
         String nombre,
         String precio,
         String imagen,
         String descripcion,
-        String etiqueta
+        String categoria,
+        String grupo
     ) {
-
-        return """
-            <article class='producto'>
-
-                <div class='producto-imagen'>
-
-                    <span class='etiqueta-producto'>%s</span>
-
-                    <img src='/imagenes/%s'
-                         alt='%s'
-                         loading='lazy'>
-
-                </div>
-
-                <div class='producto-info'>
-
-                    <div class='producto-nombre-precio'>
-
-                        <h3>%s</h3>
-
-                        <strong>%s</strong>
-
-                    </div>
-
-                    <p class='descripcion'>%s</p>
-
-                    <button type='button'>
-                        Consultar producto
-                    </button>
-
-                </div>
-
-            </article>
-            """.formatted(
-                etiqueta,
-                imagen,
-                nombre,
-                nombre,
-                precio,
-                descripcion
-            );
     }
 
-    private static String album(
-        String titulo,
+    private record Album(
+        String ruta,
+        String nombre,
         String imagen,
         String descripcion
     ) {
-
-        return """
-            <article class='album'>
-
-                <div class='album-imagen'>
-                    <img src='/imagenes/%s'
-                         alt='Portada de %s'
-                         loading='lazy'>
-                </div>
-
-                <div>
-
-                    <p class='album-etiqueta'>
-                        REFERENCIA MUSICAL
-                    </p>
-
-                    <h3>%s</h3>
-
-                    <p class='album-descripcion'>%s</p>
-
-                </div>
-
-            </article>
-            """.formatted(
-                imagen,
-                titulo,
-                titulo,
-                descripcion
-            );
     }
 }

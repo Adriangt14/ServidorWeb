@@ -2,93 +2,66 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Set;
 
 public class ManejadorCliente {
 
-    private static final int TIMEOUT_LECTURA_MS = 5_000;
+    private static final int TIMEOUT_LECTURA_MS = 5000;
+    private static final int MAX_LINEA_HTTP = 4096;
 
-    private static final int MAX_LINEA_HTTP = 4_096;
+    private static final Set<String> IMAGENES_PERMITIDAS = Set.of(
+        "encabezado.jpeg",
+        "Audifonos_Razer.webp",
+        "Figura_Miku.png",
+        "Figura_Garen_Pingu.webp",
+        "Logitech_Pro.png",
+        "Logitech_Basico_Teclado.png",
+        "teclado.png",
+        "Album_Nothingbutthebest.webp",
+        "Album_Lavozdeoro.jpg"
+    );
 
-    public static void atender(
-        Socket clienteSocket,
-        String id
-    ) {
+    public static void atender(Socket clienteSocket, String id) {
 
-        String nombreHilo =
-            Thread.currentThread().getName();
+        String hilo = Thread.currentThread().getName();
 
-        String ip =
-            clienteSocket.getInetAddress()
-                .getHostAddress();
+        String ip = clienteSocket.getInetAddress().getHostAddress();
 
-        String ruta = "/";
+        String ruta = Rutas.INICIO;
 
         Estadisticas.iniciarSolicitud(id);
 
         try {
 
-            clienteSocket.setSoTimeout(
-                TIMEOUT_LECTURA_MS
+            clienteSocket.setSoTimeout(TIMEOUT_LECTURA_MS);
+
+            BufferedReader entrada = new BufferedReader(
+                new InputStreamReader(
+                    clienteSocket.getInputStream(),
+                    StandardCharsets.UTF_8
+                )
             );
 
-            BufferedReader entrada =
-                new BufferedReader(
-                    new InputStreamReader(
-                        clienteSocket.getInputStream(),
-                        StandardCharsets.UTF_8
-                    )
-                );
-
-            PrintWriter salida =
-                new PrintWriter(
-                    clienteSocket.getOutputStream(),
-                    true,
-                    StandardCharsets.UTF_8
-                );
-
-            String peticion =
-                leerLineaLimitada(
-                    entrada,
-                    MAX_LINEA_HTTP
-                );
+            String peticion = leerLineaLimitada(entrada);
 
             if (peticion == null || peticion.isBlank()) {
                 return;
             }
 
-            if (!peticion.startsWith("GET ")) {
+            String[] partes = peticion.split(" ", 3);
 
-                enviarRespuesta(
-                    salida,
+            if (partes.length < 2 || !partes[0].equals("GET")) {
+
+                enviarTexto(
+                    clienteSocket,
                     "HTTP/1.1 400 Bad Request",
-                    paginaError(
-                        "Solicitud no soportada",
-                        nombreHilo
-                    )
-                );
-
-                return;
-            }
-
-            String[] partes =
-                peticion.split(" ", 3);
-
-            if (partes.length < 2) {
-
-                enviarRespuesta(
-                    salida,
-                    "HTTP/1.1 400 Bad Request",
-                    paginaError(
-                        "Solicitud inválida",
-                        nombreHilo
-                    )
+                    paginaError("Solicitud no válida.")
                 );
 
                 return;
@@ -96,80 +69,61 @@ public class ManejadorCliente {
 
             ruta = partes[1];
 
-            int indiceConsulta =
-                ruta.indexOf('?');
+            int consulta = ruta.indexOf('?');
 
-            if (indiceConsulta >= 0) {
-
-                ruta =
-                    ruta.substring(
-                        0,
-                        indiceConsulta
-                    );
+            if (consulta >= 0) {
+                ruta = ruta.substring(0, consulta);
             }
 
-            Estadisticas.actualizarRuta(
-                id,
-                ruta
-            );
+            if (Rutas.esRutaProtegida(ruta)) {
 
-            if (ruta.startsWith("/imagenes/")) {
+                Estadisticas.actualizarRuta(id, Rutas.BLOQUEADO);
 
-                enviarImagen(
-                    ruta,
-                    clienteSocket
+                enviarTexto(
+                    clienteSocket,
+                    "HTTP/1.1 404 Not Found",
+                    paginaError("Recurso no encontrado.")
                 );
 
                 return;
             }
 
-            boolean paginaValida =
-                ruta.equals("/") ||
-                ruta.equals("/productos") ||
-                ruta.equals("/solicitudes") ||
-                ruta.equals("/hilos") ||
-                ruta.equals("/clientes") ||
-                esProductoValido(ruta);
+            Estadisticas.actualizarRuta(id, ruta);
 
-            if (paginaValida) {
-
-                String pagina =
-                    PaginaWeb.generar(
-                        ruta,
-                        nombreHilo
-                    );
-
-                enviarRespuesta(
-                    salida,
-                    "HTTP/1.1 200 OK",
-                    pagina
-                );
-
-            } else {
-
-                enviarRespuesta(
-                    salida,
-                    "HTTP/1.1 404 Not Found",
-                    paginaError(
-                        ruta,
-                        nombreHilo
-                    )
-                );
+            if (Rutas.esImagen(ruta)) {
+                enviarImagen(ruta, clienteSocket);
+                return;
             }
+
+            if (!Rutas.esPaginaValida(ruta)) {
+
+                enviarTexto(
+                    clienteSocket,
+                    "HTTP/1.1 404 Not Found",
+                    paginaError("La página solicitada no existe.")
+                );
+
+                return;
+            }
+
+            String pagina = PaginaWeb.generar(ruta, hilo);
+
+            enviarTexto(
+                clienteSocket,
+                "HTTP/1.1 200 OK",
+                pagina
+            );
 
         } catch (java.net.SocketTimeoutException e) {
 
             System.err.println(
-                "[" + nombreHilo +
-                "] Timeout leyendo cliente: " +
-                ip
+                "[" + hilo + "] Tiempo de lectura agotado: " + ip
             );
 
         } catch (IOException e) {
 
             System.err.println(
-                "[" + nombreHilo +
-                "] Error atendiendo cliente: " +
+                "[" + hilo + "] Error atendiendo solicitud: " +
                 e.getMessage()
             );
 
@@ -179,30 +133,21 @@ public class ManejadorCliente {
                 id,
                 ip,
                 ruta,
-                nombreHilo
+                hilo
             );
 
             try {
-
                 clienteSocket.close();
-
-            } catch (IOException e) {
-
-                System.err.println(
-                    "Error cerrando conexión: " +
-                    e.getMessage()
-                );
+            } catch (IOException ignored) {
             }
         }
     }
 
     private static String leerLineaLimitada(
-        BufferedReader entrada,
-        int maxLongitud
+        BufferedReader entrada
     ) throws IOException {
 
-        StringBuilder linea =
-            new StringBuilder();
+        StringBuilder linea = new StringBuilder();
 
         int caracter;
 
@@ -216,189 +161,141 @@ public class ManejadorCliente {
                 continue;
             }
 
-            if (linea.length() >= maxLongitud) {
-
-                throw new IOException(
-                    "Línea HTTP demasiado larga"
-                );
+            if (linea.length() >= MAX_LINEA_HTTP) {
+                throw new IOException("Línea HTTP demasiado larga.");
             }
 
             linea.append((char) caracter);
         }
 
-        if (
-            caracter == -1 &&
-            linea.length() == 0
-        ) {
+        if (caracter == -1 && linea.isEmpty()) {
             return null;
         }
 
         return linea.toString();
     }
 
-    private static boolean esProductoValido(
-        String ruta
-    ) {
-
-        if (!ruta.startsWith("/producto/")) {
-            return false;
-        }
-
-        String id =
-            ruta.substring(
-                "/producto/".length()
-            );
-
-        return id.matches("[1-6]");
-    }
-
-    private static String paginaError(
-        String mensaje,
-        String nombreHilo
-    ) {
-
-        return
-            "<!DOCTYPE html>" +
-            "<html lang='es'>" +
-            "<head>" +
-            "<meta charset='UTF-8'>" +
-            "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
-            "<title>Error</title>" +
-            "</head>" +
-            "<body>" +
-            "<h1>404 - Página no encontrada</h1>" +
-            "<p>" + mensaje + "</p>" +
-            "<p>Hilo: " + nombreHilo + "</p>" +
-            "</body>" +
-            "</html>";
-    }
-
-    private static void enviarRespuesta(
-        PrintWriter salida,
+    private static void enviarTexto(
+        Socket socket,
         String estado,
         String pagina
-    ) {
+    ) throws IOException {
 
-        int longitud =
-            pagina.getBytes(
-                StandardCharsets.UTF_8
-            ).length;
+        byte[] cuerpo = pagina.getBytes(StandardCharsets.UTF_8);
 
-        salida.println(estado);
+        String encabezados =
+            estado + "\r\n" +
+            "Content-Type: text/html; charset=UTF-8\r\n" +
+            "Content-Length: " + cuerpo.length + "\r\n" +
+            "X-Content-Type-Options: nosniff\r\n" +
+            "Connection: close\r\n\r\n";
 
-        salida.println(
-            "Content-Type: text/html; charset=UTF-8"
+        OutputStream salida = socket.getOutputStream();
+
+        salida.write(
+            encabezados.getBytes(StandardCharsets.UTF_8)
         );
 
-        salida.println(
-            "Content-Length: " + longitud
-        );
-
-        salida.println(
-            "Connection: close"
-        );
-
-        salida.println();
-
-        salida.print(pagina);
-
+        salida.write(cuerpo);
         salida.flush();
     }
 
     private static void enviarImagen(
         String ruta,
-        Socket clienteSocket
+        Socket socket
     ) throws IOException {
 
-        String nombreArchivo =
-            ruta.substring(
-                "/imagenes/".length()
+        String nombre = ruta.substring(
+            (Rutas.IMAGENES + "/").length()
+        );
+
+        if (!IMAGENES_PERMITIDAS.contains(nombre)) {
+            enviarTexto(
+                socket,
+                "HTTP/1.1 404 Not Found",
+                paginaError("Imagen no encontrada.")
             );
-
-        Path carpetaImagenes =
-            Paths.get("imagenes")
-                .toAbsolutePath()
-                .normalize();
-
-        Path archivo =
-            carpetaImagenes
-                .resolve(nombreArchivo)
-                .normalize();
-
-        String extension = "";
-
-        int punto =
-            nombreArchivo.lastIndexOf('.');
-
-        if (punto >= 0) {
-
-            extension =
-                nombreArchivo
-                    .substring(punto)
-                    .toLowerCase(Locale.ROOT);
-        }
-
-        String tipoContenido = switch (extension) {
-
-            case ".png" -> "image/png";
-
-            case ".jpg", ".jpeg" -> "image/jpeg";
-
-            case ".webp" -> "image/webp";
-
-            default -> null;
-        };
-
-        OutputStream salida =
-            clienteSocket.getOutputStream();
-
-        if (
-            !archivo.startsWith(carpetaImagenes) ||
-            !Files.isRegularFile(archivo) ||
-            tipoContenido == null
-        ) {
-
-            byte[] cuerpo =
-                "Imagen no encontrada".getBytes(
-                    StandardCharsets.UTF_8
-                );
-
-            String respuesta =
-                "HTTP/1.1 404 Not Found\r\n" +
-                "Content-Type: text/plain; charset=UTF-8\r\n" +
-                "Content-Length: " + cuerpo.length + "\r\n" +
-                "Connection: close\r\n\r\n";
-
-            salida.write(
-                respuesta.getBytes(
-                    StandardCharsets.UTF_8
-                )
-            );
-
-            salida.write(cuerpo);
-
-            salida.flush();
-
             return;
         }
 
-        byte[] imagen =
-            Files.readAllBytes(archivo);
+        Path carpeta = Paths.get("imagenes")
+            .toAbsolutePath()
+            .normalize();
+
+        Path archivo = carpeta.resolve(nombre).normalize();
+
+        if (
+            !archivo.startsWith(carpeta) ||
+            !Files.isRegularFile(archivo)
+        ) {
+            enviarTexto(
+                socket,
+                "HTTP/1.1 404 Not Found",
+                paginaError("Imagen no encontrada.")
+            );
+            return;
+        }
+
+        String extension = "";
+
+        int punto = nombre.lastIndexOf('.');
+
+        if (punto >= 0) {
+            extension = nombre.substring(punto).toLowerCase(Locale.ROOT);
+        }
+
+        String tipo = switch (extension) {
+            case ".png" -> "image/png";
+            case ".jpg", ".jpeg" -> "image/jpeg";
+            case ".webp" -> "image/webp";
+            default -> null;
+        };
+
+        if (tipo == null) {
+            enviarTexto(
+                socket,
+                "HTTP/1.1 404 Not Found",
+                paginaError("Formato de imagen no permitido.")
+            );
+            return;
+        }
+
+        byte[] imagen = Files.readAllBytes(archivo);
 
         String encabezados =
             "HTTP/1.1 200 OK\r\n" +
-            "Content-Type: " + tipoContenido + "\r\n" +
+            "Content-Type: " + tipo + "\r\n" +
             "Content-Length: " + imagen.length + "\r\n" +
+            "X-Content-Type-Options: nosniff\r\n" +
+            "Cache-Control: public, max-age=86400\r\n" +
             "Connection: close\r\n\r\n";
 
+        OutputStream salida = socket.getOutputStream();
+
         salida.write(
-            encabezados.getBytes(
-                StandardCharsets.UTF_8
-            )
+            encabezados.getBytes(StandardCharsets.UTF_8)
         );
 
         salida.write(imagen);
-
         salida.flush();
+    }
+
+    private static String paginaError(String mensaje) {
+
+        return """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Nexus UMG</title>
+            </head>
+            <body>
+                <h1>404 - Página no encontrada</h1>
+                <p>%s</p>
+                <a href="/">Volver al inicio</a>
+            </body>
+            </html>
+            """.formatted(mensaje);
     }
 }
