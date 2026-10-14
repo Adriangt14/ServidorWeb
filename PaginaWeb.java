@@ -7,33 +7,69 @@ public class PaginaWeb {
         if (pagina.equals("/") || pagina.equals("/productos")) {
 
             String productos = String.join("\n",
-                producto("AirPods", "Q350.00", "Audifonos.png",
-                    "Audífonos inalámbricos para escuchar música y fingir que no escuchaste cuando te llamaron.",
-                    "MÁS VENDIDO", "24"),
 
-                producto("Laptop", "Q5,999.00", "laptop.png",
-                    "Laptop para estudiar, programar y tener 37 pestañas abiertas como si nada pasara.",
-                    "TECNOLOGÍA", "18"),
+                producto(
+                    "Audífonos Razer",
+                    "Consultar precio",
+                    "Audifonos_Razer.webp",
+                    "Audífonos para disfrutar tus partidas, música y sesiones largas.",
+                    "AUDIO"
+                ),
 
-                producto("Columbina", "Q5,999.00", "Columbina.png",
-                    "Figura de colección de Columbina para los amantes del coleccionismo.",
-                    "COLECCIÓN", "18"),
+                producto(
+                    "Hatsune Miku",
+                    "Consultar precio",
+                    "Figura_Miku.png",
+                    "Figura de colección para darle personalidad a tu espacio.",
+                    "COLECCIÓN"
+                ),
 
-                producto("Ahri", "Q5,999.00", "Ahri.png",
-                    "Figura de colección de Ahri: una pieza para el setup y para el corazón.",
-                    "COLECCIÓN", "18"),
+                producto(
+                    "Garen Pingu",
+                    "Consultar precio",
+                    "Figura_Garen_Pingu.webp",
+                    "Una figura coleccionable para los fans de League of Legends.",
+                    "COLECCIÓN"
+                ),
 
-                producto("Rin", "Q5,999.00", "Rin.png",
-                    "Figura de colección de Rin para los exploradores que también aman el anime.",
-                    "COLECCIÓN", "18"),
+                producto(
+                    "Logitech PRO",
+                    "Consultar precio",
+                    "Logitech_Pro.png",
+                    "Periférico Logitech PRO para completar tu estación de juego.",
+                    "PERIFÉRICOS"
+                ),
 
-                producto("Teclado mecánico", "Q425.00", "teclado.png",
-                    "Teclado mecánico para programar, jugar y hacer suficiente ruido para que toda la casa lo sepa.",
-                    "GAMING", "31"),
+                producto(
+                    "Combo Logitech",
+                    "Consultar precio",
+                    "Logitech_Basico_Teclado.png",
+                    "Teclado y mouse para trabajar, estudiar y utilizar todos los días.",
+                    "OFICINA"
+                ),
 
-                producto("Mouse gamer", "Q225.00", "mouse.png",
-                    "Mouse gamer de alta precisión para apuntar fino y culpar al ping cuando algo salga mal.",
-                    "GAMING", "15")
+                producto(
+                    "Teclado mecánico",
+                    "Q425.00",
+                    "teclado.png",
+                    "Teclado para programar, jugar y completar tu setup.",
+                    "GAMING"
+                )
+            );
+
+            String albums = String.join("\n",
+
+                album(
+                    "Nothing But the Best",
+                    "Album_Nothingbutthebest.webp",
+                    "Una referencia musical para acompañar el viaje."
+                ),
+
+                album(
+                    "La Voz de Oro",
+                    "Album_Lavozdeoro.jpg",
+                    "Una colección sonora que también forma parte de Nexus UMG."
+                )
             );
 
             contenido = """
@@ -50,8 +86,9 @@ public class PaginaWeb {
                         </h1>
 
                         <p class='banner-descripcion'>
-                            Tecnología, gaming y accesorios elegidos
-                            para acompañarte en cada expedición.
+                            Tecnología, gaming y accesorios
+                            elegidos para acompañarte
+                            en cada expedición.
                         </p>
 
                         <a class='boton-banner' href='#productos'>
@@ -78,19 +115,18 @@ public class PaginaWeb {
                             <h2>Selección de la expedición</h2>
 
                             <p class='subtitulo-seccion'>
-                                Tecnología, gaming y piezas
-                                para tu próximo viaje.
+                                Seis piezas para tu próxima aventura.
                             </p>
                         </div>
 
                         <span class='contador-productos'>
-                            07 PRODUCTOS
+                            06 PRODUCTOS
                         </span>
 
                     </div>
 
                     <div class='productos'>
-                        %s
+                        {{PRODUCTOS}}
                     </div>
 
                 </section>
@@ -113,8 +149,37 @@ public class PaginaWeb {
                     </div>
 
                     <a href='#productos' class='enlace-promocional'>
-                        Explorar selección <span>→</span>
+                        Explorar selección →
                     </a>
+
+                </section>
+
+                <section class='archivo-sonoro' id='musica'>
+
+                    <div class='encabezado-seccion'>
+
+                        <div>
+                            <p class='seccion-etiqueta'>
+                                OTRAS FORMAS DE EXPLORAR
+                            </p>
+
+                            <h2>Archivo sonoro</h2>
+
+                            <p class='subtitulo-seccion'>
+                                Álbumes que también forman parte
+                                de la identidad de Nexus UMG.
+                            </p>
+                        </div>
+
+                        <span class='contador-productos'>
+                            02 REFERENCIAS
+                        </span>
+
+                    </div>
+
+                    <div class='albums'>
+                        {{ALBUMS}}
+                    </div>
 
                 </section>
 
@@ -122,6 +187,7 @@ public class PaginaWeb {
 
                     <div class='beneficio'>
                         <span class='beneficio-icono'>◇</span>
+
                         <div>
                             <strong>Selección cuidada</strong>
                             <p>Productos para tu día a día.</p>
@@ -130,6 +196,7 @@ public class PaginaWeb {
 
                     <div class='beneficio'>
                         <span class='beneficio-icono'>⌂</span>
+
                         <div>
                             <strong>Atención cercana</strong>
                             <p>Estamos para ayudarte.</p>
@@ -138,6 +205,7 @@ public class PaginaWeb {
 
                     <div class='beneficio'>
                         <span class='beneficio-icono'>✧</span>
+
                         <div>
                             <strong>Tu próxima aventura</strong>
                             <p>Empieza con el equipo adecuado.</p>
@@ -145,7 +213,11 @@ public class PaginaWeb {
                     </div>
 
                 </section>
-                """.formatted(productos);
+                """;
+
+            contenido = contenido
+                .replace("{{PRODUCTOS}}", productos)
+                .replace("{{ALBUMS}}", albums);
 
         } else if (pagina.equals("/solicitudes")) {
 
@@ -162,11 +234,9 @@ public class PaginaWeb {
                     </p>
 
                     <div class='panel-interno'>
-
                         <h3>Solicitud actual</h3>
                         <p>GET /solicitudes</p>
                         <p>Atendida por: %s</p>
-
                     </div>
 
                 </section>
@@ -187,11 +257,9 @@ public class PaginaWeb {
                     </p>
 
                     <div class='panel-interno'>
-
                         <h3>Thread Pool</h3>
                         <p>Hilos configurados: 10</p>
                         <p>Solicitud atendida por: %s</p>
-
                     </div>
 
                 </section>
@@ -212,10 +280,8 @@ public class PaginaWeb {
                     </p>
 
                     <div class='panel-interno'>
-
                         <h3>Estado</h3>
                         <p>Servidor preparado para recibir clientes.</p>
-
                     </div>
 
                 </section>
@@ -231,12 +297,11 @@ public class PaginaWeb {
                     <h1>Detalle del producto</h1>
 
                     <p>
-                        Esta sección está preparada para incorporar
-                        las fichas individuales de los productos.
+                        La ficha individual estará disponible
+                        en una siguiente versión.
                     </p>
 
-                    <a class='boton-banner boton-interno'
-                       href='/productos'>
+                    <a class='boton-banner' href='/productos'>
                         Volver a la tienda →
                     </a>
 
@@ -254,7 +319,7 @@ public class PaginaWeb {
 
                     <p>El recurso solicitado no está disponible.</p>
 
-                    <a class='boton-banner boton-interno' href='/'>
+                    <a class='boton-banner' href='/'>
                         Volver al inicio →
                     </a>
 
@@ -281,8 +346,7 @@ public class PaginaWeb {
                       href='https://fonts.googleapis.com'>
 
                 <link rel='preconnect'
-                      href='https://fonts.gstatic.com'
-                      crossorigin>
+                      href='https://fonts.gstatic.com' crossorigin>
 
                 <link href='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap'
                       rel='stylesheet'>
@@ -295,7 +359,7 @@ public class PaginaWeb {
 
                     :root {
                         --noche: #10171d;
-                        --noche-profunda: #0a0f13;
+                        --profundo: #0a0f13;
                         --marfil: #f0e6d6;
                         --oro: #c9a46a;
                         --texto: #e8e0d4;
@@ -304,7 +368,7 @@ public class PaginaWeb {
 
                     html {
                         scroll-behavior: smooth;
-                        scroll-padding-top: 90px;
+                        scroll-padding-top: 20px;
                     }
 
                     body {
@@ -322,16 +386,13 @@ public class PaginaWeb {
                     /* ENCABEZADO */
 
                     .site-header {
-                        min-height: 76px;
-                        padding: 14px clamp(20px, 4.5vw, 72px);
                         display: flex;
                         align-items: center;
                         justify-content: space-between;
-                        gap: 26px;
-                        background: rgba(10, 15, 19, .96);
-                        border-bottom: 1px solid rgba(201, 164, 106, .28);
-                        position: relative;
-                        z-index: 2;
+                        gap: 24px;
+                        padding: 16px clamp(20px, 5vw, 72px);
+                        background: var(--profundo);
+                        border-bottom: 1px solid rgba(201,164,106,.3);
                     }
 
                     .marca {
@@ -345,15 +406,14 @@ public class PaginaWeb {
                     .marca-simbolo {
                         color: var(--oro);
                         font-size: 30px;
-                        line-height: 1;
                     }
 
                     .marca-texto {
+                        color: #f8f1e7;
                         font-family: 'Cormorant Garamond', Georgia, serif;
                         font-size: 30px;
-                        line-height: 1;
                         letter-spacing: 1.4px;
-                        color: #f8f1e7;
+                        line-height: 1;
                     }
 
                     .marca-texto span {
@@ -363,78 +423,63 @@ public class PaginaWeb {
                     .nav-links {
                         display: flex;
                         align-items: center;
-                        justify-content: center;
-                        gap: clamp(14px, 2.2vw, 32px);
+                        gap: clamp(12px, 2vw, 28px);
                     }
 
                     .nav-links a {
-                        text-decoration: none;
                         color: #d2d0cd;
-                        font-size: 13px;
-                        transition: color .2s ease;
+                        font-size: 12px;
+                        text-decoration: none;
+                        white-space: nowrap;
                     }
 
-                    .nav-links a:hover,
-                    .nav-links a.activo {
+                    .nav-links a:hover {
                         color: var(--oro);
                     }
 
                     .header-accion {
                         flex-shrink: 0;
-                        text-decoration: none;
+                        padding: 9px 13px;
+                        border: 1px solid var(--oro);
                         color: var(--marfil);
-                        border: 1px solid rgba(201, 164, 106, .65);
-                        padding: 9px 14px;
-                        border-radius: 3px;
-                        font-size: 12px;
-                        letter-spacing: .4px;
+                        font-size: 11px;
+                        text-decoration: none;
                     }
 
                     .header-accion:hover {
                         background: var(--oro);
-                        color: var(--noche-profunda);
+                        color: var(--profundo);
                     }
 
-                    /* BANNER PRINCIPAL */
+                    /* BANNER */
 
                     .banner {
                         min-height: clamp(430px, 49vw, 630px);
                         display: flex;
                         align-items: center;
                         position: relative;
-                        padding: clamp(34px, 7vw, 105px);
+                        padding: clamp(30px, 7vw, 100px);
                         overflow: hidden;
-
                         background-image:
                             linear-gradient(
                                 90deg,
-                                rgba(8, 13, 17, .93) 0%,
-                                rgba(8, 13, 17, .72) 34%,
-                                rgba(8, 13, 17, .12) 75%,
-                                rgba(8, 13, 17, .06) 100%
+                                rgba(8,13,17,.93),
+                                rgba(8,13,17,.65) 42%,
+                                rgba(8,13,17,.12)
                             ),
                             linear-gradient(
                                 0deg,
-                                rgba(8, 13, 17, .55),
-                                transparent 45%
+                                rgba(8,13,17,.5),
+                                transparent 50%
                             ),
                             url('/imagenes/encabezado.jpeg');
-
-                        background-position:
-                            center,
-                            center,
-                            center 48%;
-
+                        background-position: center, center, center;
                         background-size: cover;
-
-                        border-bottom:
-                            1px solid rgba(201, 164, 106, .32);
+                        border-bottom: 1px solid rgba(201,164,106,.3);
                     }
 
                     .banner-contenido {
-                        max-width: 600px;
-                        position: relative;
-                        z-index: 1;
+                        max-width: 580px;
                     }
 
                     .banner-etiqueta,
@@ -443,7 +488,7 @@ public class PaginaWeb {
                         color: var(--oro);
                         font-size: 10px;
                         font-weight: 600;
-                        letter-spacing: 2.3px;
+                        letter-spacing: 2px;
                     }
 
                     .banner h1,
@@ -452,38 +497,34 @@ public class PaginaWeb {
                     .pagina-interna h1 {
                         font-family: 'Cormorant Garamond', Georgia, serif;
                         font-weight: 500;
-                        letter-spacing: -.5px;
                     }
 
                     .banner h1 {
-                        max-width: 600px;
                         margin: 0;
-                        font-size: clamp(46px, 5.8vw, 76px);
-                        line-height: .98;
                         color: #f6eee2;
-                        text-wrap: balance;
+                        font-size: clamp(44px, 6vw, 76px);
+                        line-height: .98;
                     }
 
                     .banner-descripcion {
-                        max-width: 440px;
+                        max-width: 420px;
                         margin: 22px 0 26px;
                         color: #ddd7ce;
-                        font-size: 15px;
+                        font-size: 14px;
                     }
 
                     .boton-banner {
                         display: inline-flex;
                         align-items: center;
-                        gap: 25px;
-                        padding: 13px 19px;
+                        gap: 20px;
+                        padding: 12px 18px;
+                        border: 1px solid var(--marfil);
                         background: var(--marfil);
                         color: #171b1e;
-                        text-decoration: none;
                         font-size: 12px;
                         font-weight: 600;
-                        border: 1px solid var(--marfil);
-                        border-radius: 2px;
-                        transition: background .2s, color .2s;
+                        text-decoration: none;
+                        transition: .2s;
                     }
 
                     .boton-banner:hover {
@@ -491,25 +532,22 @@ public class PaginaWeb {
                         color: var(--marfil);
                     }
 
-                    .boton-banner span {
-                        font-size: 18px;
-                    }
-
                     .banner-pie {
                         position: absolute;
+                        right: 25px;
                         bottom: 18px;
-                        right: clamp(20px, 4.5vw, 72px);
+                        color: #e0d8cc;
                         font-size: 9px;
-                        letter-spacing: 2px;
-                        color: rgba(246, 238, 226, .72);
+                        letter-spacing: 1.5px;
                     }
 
                     /* CATÁLOGO */
 
-                    .catalogo {
+                    .catalogo,
+                    .archivo-sonoro {
                         max-width: 1550px;
                         margin: 0 auto;
-                        padding: 54px clamp(20px, 4.5vw, 72px) 68px;
+                        padding: 50px clamp(20px, 5vw, 72px) 60px;
                     }
 
                     .encabezado-seccion {
@@ -520,34 +558,29 @@ public class PaginaWeb {
                         margin-bottom: 25px;
                     }
 
-                    .encabezado-seccion .seccion-etiqueta {
-                        margin-bottom: 5px;
-                    }
-
                     .encabezado-seccion h2 {
                         margin: 0;
-                        font-size: clamp(34px, 3.7vw, 48px);
                         color: #f5ecdf;
-                        line-height: 1.06;
+                        font-size: clamp(32px, 4vw, 47px);
+                        line-height: 1.05;
                     }
 
                     .subtitulo-seccion {
-                        margin: 8px 0 0;
+                        margin: 9px 0 0;
                         color: var(--muted);
-                        font-size: 13px;
+                        font-size: 12px;
                     }
 
                     .contador-productos {
-                        padding-bottom: 5px;
                         color: #d2b783;
                         font-size: 10px;
-                        letter-spacing: 1.4px;
+                        letter-spacing: 1.3px;
                         white-space: nowrap;
                     }
 
                     .productos {
                         display: grid;
-                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
                         gap: 20px;
                     }
 
@@ -556,55 +589,35 @@ public class PaginaWeb {
                         display: flex;
                         flex-direction: column;
                         overflow: hidden;
+                        border: 1px solid rgba(201,164,106,.27);
                         background: #eee5d7;
                         color: #202328;
-                        border: 1px solid rgba(201, 164, 106, .27);
-                        border-radius: 5px;
-                        transition: transform .25s ease, box-shadow .25s ease;
+                        transition: transform .2s, box-shadow .2s;
                     }
 
                     .producto:hover {
                         transform: translateY(-4px);
-                        box-shadow: 0 14px 30px rgba(0, 0, 0, .28);
+                        box-shadow: 0 12px 25px rgba(0,0,0,.25);
                     }
 
                     .producto-imagen {
-                        height: 215px;
-                        position: relative;
+                        height: 230px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
+                        position: relative;
                         padding: 18px;
                         overflow: hidden;
-
                         background:
                             radial-gradient(
                                 ellipse at center,
-                                #fffaf1 0%,
-                                #e5d9c7 76%,
-                                #c9b99e 100%
-                            );
-                    }
-
-                    .producto-imagen::after {
-                        content: '';
-                        position: absolute;
-                        left: 12%;
-                        right: 12%;
-                        bottom: 15px;
-                        height: 1px;
-                        background:
-                            linear-gradient(
-                                90deg,
-                                transparent,
-                                rgba(107, 81, 49, .34),
-                                transparent
+                                #fffaf1,
+                                #e5d9c7 75%,
+                                #c9b99e
                             );
                     }
 
                     .producto-imagen img {
-                        position: relative;
-                        z-index: 1;
                         width: 100%;
                         height: 100%;
                         object-fit: contain;
@@ -615,30 +628,12 @@ public class PaginaWeb {
                         position: absolute;
                         top: 12px;
                         left: 12px;
-                        z-index: 1;
                         padding: 5px 7px;
-                        background: rgba(17, 23, 28, .9);
-                        color: #f2e7d5;
+                        background: #151d23;
+                        color: var(--marfil);
                         font-size: 8px;
                         font-weight: 600;
                         letter-spacing: 1px;
-                    }
-
-                    .favorito {
-                        position: absolute;
-                        top: 10px;
-                        right: 10px;
-                        z-index: 1;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        width: 31px;
-                        height: 31px;
-                        border: 1px solid rgba(32, 35, 40, .13);
-                        border-radius: 50%;
-                        background: rgba(255, 250, 241, .92);
-                        color: #30343a;
-                        font-size: 19px;
                     }
 
                     .producto-info {
@@ -651,7 +646,7 @@ public class PaginaWeb {
                     .producto-nombre-precio {
                         display: flex;
                         justify-content: space-between;
-                        align-items: start;
+                        align-items: flex-start;
                         gap: 10px;
                     }
 
@@ -659,53 +654,32 @@ public class PaginaWeb {
                         margin: 0;
                         font-size: 14px;
                         font-weight: 600;
-                        line-height: 1.35;
                     }
 
                     .producto-nombre-precio strong {
-                        white-space: nowrap;
-                        font-size: 13px;
-                        color: #11171b;
+                        max-width: 50%;
+                        color: #171d22;
+                        font-size: 11px;
+                        text-align: right;
                     }
 
                     .descripcion {
-                        min-height: 58px;
-                        margin: 10px 0 12px;
+                        min-height: 48px;
+                        margin: 12px 0 18px;
                         color: #64615d;
                         font-size: 11px;
-                        line-height: 1.5;
-                    }
-
-                    .estrellas {
-                        margin: auto 0 13px;
-                        color: #b48642;
-                        font-size: 13px;
-                        letter-spacing: 1px;
-                    }
-
-                    .estrellas span {
-                        margin-left: 5px;
-                        color: #77716a;
-                        font-size: 10px;
-                        letter-spacing: 0;
                     }
 
                     .producto button {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        gap: 8px;
                         width: 100%;
-                        margin-top: 0;
-                        padding: 11px 12px;
+                        margin-top: auto;
+                        padding: 11px;
                         border: 1px solid #171d22;
-                        border-radius: 2px;
                         background: #171d22;
                         color: #f5eee4;
-                        cursor: pointer;
                         font-family: inherit;
                         font-size: 11px;
-                        transition: background .2s, color .2s;
+                        cursor: pointer;
                     }
 
                     .producto button:hover {
@@ -713,58 +687,105 @@ public class PaginaWeb {
                         color: #171d22;
                     }
 
-                    /* FRANJA PROMOCIONAL */
+                    /* FRANJA GAMING */
 
                     .franja-promocional {
                         display: flex;
                         align-items: center;
                         justify-content: space-between;
-                        gap: 28px;
-                        padding: 42px clamp(20px, 7vw, 110px);
-                        border-top: 1px solid rgba(201, 164, 106, .28);
-                        border-bottom: 1px solid rgba(201, 164, 106, .28);
-                        background: linear-gradient(100deg, #172128, #10171d 70%);
-                    }
-
-                    .franja-promocional .seccion-etiqueta {
-                        margin-bottom: 6px;
+                        gap: 25px;
+                        padding: 40px clamp(20px, 7vw, 110px);
+                        border-top: 1px solid rgba(201,164,106,.25);
+                        border-bottom: 1px solid rgba(201,164,106,.25);
+                        background: linear-gradient(100deg, #172128, #10171d);
                     }
 
                     .franja-promocional h2 {
                         margin: 0;
                         color: #f5ecdf;
-                        font-size: clamp(30px, 3vw, 42px);
+                        font-size: clamp(30px, 4vw, 42px);
                         line-height: 1.05;
                     }
 
                     .franja-promocional p:not(.seccion-etiqueta) {
-                        margin: 9px 0 0;
                         color: var(--muted);
                         font-size: 12px;
                     }
 
                     .enlace-promocional {
                         flex-shrink: 0;
-                        text-decoration: none;
                         color: var(--marfil);
+                        font-size: 12px;
+                        text-decoration: none;
                         border-bottom: 1px solid var(--oro);
                         padding: 9px 0;
-                        font-size: 12px;
                     }
 
-                    .enlace-promocional span {
+                    /* MÚSICA */
+
+                    .archivo-sonoro {
+                        border-top: 1px solid rgba(201,164,106,.2);
+                    }
+
+                    .albums {
+                        display: grid;
+                        grid-template-columns: repeat(2, minmax(0, 1fr));
+                        gap: 22px;
+                    }
+
+                    .album {
+                        display: grid;
+                        grid-template-columns: minmax(110px, 180px) minmax(0, 1fr);
+                        align-items: center;
+                        gap: 20px;
+                        padding: 16px;
+                        background: #151e24;
+                        border: 1px solid rgba(201,164,106,.24);
+                    }
+
+                    .album-imagen {
+                        aspect-ratio: 1;
+                        overflow: hidden;
+                        background: #0b0f12;
+                    }
+
+                    .album-imagen img {
+                        display: block;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+
+                    .album-etiqueta {
+                        margin: 0 0 8px;
                         color: var(--oro);
-                        margin-left: 10px;
+                        font-size: 9px;
+                        letter-spacing: 1.4px;
                     }
 
-                    /* BENEFICIOS */
+                    .album h3 {
+                        margin: 0 0 8px;
+                        color: #f2e9dc;
+                        font-family: 'Cormorant Garamond', Georgia, serif;
+                        font-size: clamp(24px, 3vw, 34px);
+                        line-height: 1.05;
+                    }
+
+                    .album-descripcion {
+                        margin: 0;
+                        color: var(--muted);
+                        font-size: 11px;
+                    }
+
+                    /* BENEFICIOS Y PIE */
 
                     .beneficios {
                         display: grid;
                         grid-template-columns: repeat(3, minmax(0, 1fr));
                         gap: 25px;
                         padding: 28px clamp(20px, 7vw, 110px);
-                        border-bottom: 1px solid rgba(201, 164, 106, .2);
+                        border-top: 1px solid rgba(201,164,106,.2);
+                        border-bottom: 1px solid rgba(201,164,106,.2);
                     }
 
                     .beneficio {
@@ -779,11 +800,9 @@ public class PaginaWeb {
                     }
 
                     .beneficio strong {
-                        display: block;
-                        color: #f0e6d6;
+                        color: var(--marfil);
                         font-family: 'Cormorant Garamond', Georgia, serif;
                         font-size: 19px;
-                        font-weight: 600;
                     }
 
                     .beneficio p {
@@ -792,23 +811,16 @@ public class PaginaWeb {
                         font-size: 10px;
                     }
 
-                    /* PIE DE PÁGINA */
-
                     .site-footer {
                         display: flex;
-                        align-items: start;
                         justify-content: space-between;
                         gap: 28px;
-                        padding: 30px clamp(20px, 4.5vw, 72px) 36px;
-                        background: var(--noche-profunda);
+                        padding: 30px clamp(20px, 5vw, 72px);
+                        background: var(--profundo);
                     }
 
                     .footer-marca {
-                        max-width: 330px;
-                    }
-
-                    .footer-marca .marca-texto {
-                        font-size: 26px;
+                        max-width: 300px;
                     }
 
                     .footer-marca p {
@@ -824,9 +836,9 @@ public class PaginaWeb {
                     .footer-columna a {
                         display: block;
                         margin-top: 7px;
-                        text-decoration: none;
                         color: #9da4a8;
                         font-size: 10px;
+                        text-decoration: none;
                     }
 
                     .footer-columna a:hover {
@@ -839,7 +851,7 @@ public class PaginaWeb {
                         min-height: 65vh;
                         max-width: 1100px;
                         margin: 0 auto;
-                        padding: 70px clamp(22px, 6vw, 80px);
+                        padding: 70px 25px;
                     }
 
                     .pagina-interna h1 {
@@ -855,7 +867,7 @@ public class PaginaWeb {
                         margin-top: 24px;
                         padding: 24px;
                         background: #171f25;
-                        border: 1px solid rgba(201, 164, 106, .25);
+                        border: 1px solid rgba(201,164,106,.25);
                     }
 
                     .panel-interno h3 {
@@ -867,13 +879,9 @@ public class PaginaWeb {
                         color: var(--muted);
                     }
 
-                    .boton-interno {
-                        margin-top: 15px;
-                    }
+                    /* TABLET */
 
-                    /* TABLETS */
-
-                    @media (max-width: 1100px) {
+                    @media (max-width: 1000px) {
 
                         .site-header {
                             flex-wrap: wrap;
@@ -883,21 +891,30 @@ public class PaginaWeb {
                             order: 3;
                             width: 100%;
                             justify-content: flex-start;
-                            padding-top: 5px;
+                            overflow-x: auto;
+                            padding: 5px 0;
                         }
 
                         .productos {
-                            grid-template-columns: repeat(3, minmax(0, 1fr));
+                            grid-template-columns: repeat(2, minmax(0, 1fr));
+                        }
+
+                        .albums {
+                            grid-template-columns: 1fr;
+                        }
+
+                        .beneficios {
+                            grid-template-columns: 1fr;
                         }
                     }
 
-                    /* MÓVILES */
+                    /* MÓVIL */
 
-                    @media (max-width: 760px) {
+                    @media (max-width: 600px) {
 
                         .site-header {
                             gap: 14px;
-                            padding: 15px 20px;
+                            padding: 15px 18px;
                         }
 
                         .marca-texto {
@@ -905,54 +922,50 @@ public class PaginaWeb {
                         }
 
                         .nav-links {
-                            gap: 17px;
-                            overflow-x: auto;
-                            padding-bottom: 4px;
+                            gap: 18px;
                         }
 
                         .nav-links a {
-                            white-space: nowrap;
-                            font-size: 12px;
+                            font-size: 11px;
                         }
 
                         .header-accion {
-                            font-size: 11px;
-                            padding: 8px 10px;
+                            display: none;
                         }
 
                         .banner {
-                            min-height: 470px;
-                            padding: 40px 26px;
+                            min-height: 440px;
+                            padding: 35px 24px;
                             background-position: center, center, 58% center;
                         }
 
                         .banner h1 {
-                            max-width: 430px;
-                            font-size: clamp(43px, 9vw, 62px);
+                            font-size: clamp(42px, 10vw, 58px);
                         }
 
                         .banner-descripcion {
-                            max-width: 360px;
                             font-size: 13px;
                         }
 
-                        .banner-pie {
-                            font-size: 8px;
+                        .catalogo,
+                        .archivo-sonoro {
+                            padding: 36px 18px 42px;
                         }
 
-                        .catalogo {
-                            padding-top: 38px;
-                            padding-bottom: 45px;
+                        .encabezado-seccion {
+                            align-items: flex-start;
+                            flex-direction: column;
+                            gap: 10px;
                         }
 
                         .productos {
                             grid-template-columns: repeat(2, minmax(0, 1fr));
-                            gap: 13px;
+                            gap: 12px;
                         }
 
                         .producto-imagen {
-                            height: 175px;
-                            padding: 12px;
+                            height: 170px;
+                            padding: 10px;
                         }
 
                         .producto-info {
@@ -961,23 +974,32 @@ public class PaginaWeb {
 
                         .producto-nombre-precio {
                             flex-direction: column;
-                            gap: 5px;
+                            gap: 6px;
+                        }
+
+                        .producto-nombre-precio strong {
+                            max-width: 100%;
+                            text-align: left;
                         }
 
                         .descripcion {
-                            min-height: 72px;
+                            min-height: 65px;
                         }
 
                         .franja-promocional {
                             align-items: flex-start;
                             flex-direction: column;
-                            padding-top: 32px;
-                            padding-bottom: 32px;
+                            padding: 32px 22px;
                         }
 
-                        .beneficios {
-                            grid-template-columns: 1fr;
-                            gap: 18px;
+                        .album {
+                            grid-template-columns: 100px minmax(0, 1fr);
+                            gap: 12px;
+                            padding: 12px;
+                        }
+
+                        .album h3 {
+                            font-size: 24px;
                         }
 
                         .site-footer {
@@ -985,25 +1007,7 @@ public class PaginaWeb {
                         }
                     }
 
-                    @media (max-width: 430px) {
-
-                        .header-accion {
-                            display: none;
-                        }
-
-                        .nav-links {
-                            gap: 15px;
-                        }
-
-                        .banner {
-                            min-height: 440px;
-                        }
-
-                        .encabezado-seccion {
-                            align-items: flex-start;
-                            flex-direction: column;
-                            gap: 10px;
-                        }
+                    @media (max-width: 380px) {
 
                         .productos {
                             grid-template-columns: 1fr;
@@ -1017,8 +1021,16 @@ public class PaginaWeb {
                             flex-direction: row;
                         }
 
+                        .producto-nombre-precio strong {
+                            text-align: right;
+                        }
+
                         .descripcion {
                             min-height: 0;
+                        }
+
+                        .album {
+                            grid-template-columns: 85px minmax(0, 1fr);
                         }
 
                         .site-footer {
@@ -1039,23 +1051,21 @@ public class PaginaWeb {
 
                 <header class='site-header'>
 
-                    <a class='marca' href='/' aria-label='Nexus UMG, inicio'>
-
+                    <a class='marca' href='/'>
                         <span class='marca-simbolo'>✧</span>
 
                         <span class='marca-texto'>
                             NEXUS <span>UMG</span>
                         </span>
-
                     </a>
 
-                    <nav class='nav-links' aria-label='Navegación principal'>
+                    <nav class='nav-links'>
 
-                        <a class='activo' href='/'>Inicio</a>
+                        <a href='/'>Inicio</a>
                         <a href='/productos#productos'>Tecnología</a>
                         <a href='/productos#gaming'>Gaming</a>
                         <a href='/productos#productos'>Accesorios</a>
-                        <a href='/productos#productos'>Ofertas</a>
+                        <a href='/productos#musica'>Archivo sonoro</a>
 
                     </nav>
 
@@ -1098,10 +1108,10 @@ public class PaginaWeb {
 
                     <div class='footer-columna'>
 
-                        <strong>Ayuda</strong>
+                        <strong>Explora</strong>
 
-                        <a href='/productos#servicios'>Atención al cliente</a>
-                        <a href='/productos#servicios'>Información de la tienda</a>
+                        <a href='/productos#musica'>Archivo sonoro</a>
+                        <a href='/productos#servicios'>Servicios</a>
 
                     </div>
 
@@ -1110,7 +1120,7 @@ public class PaginaWeb {
                         <strong>Nexus UMG</strong>
 
                         <a href='/'>Sobre la tienda</a>
-                        <a href='/productos'>Explorar catálogo</a>
+                        <a href='/productos'>Catálogo</a>
 
                     </div>
 
@@ -1128,8 +1138,7 @@ public class PaginaWeb {
         String precio,
         String imagen,
         String descripcion,
-        String etiqueta,
-        String resenas
+        String etiqueta
     ) {
 
         return """
@@ -1138,8 +1147,6 @@ public class PaginaWeb {
                 <div class='producto-imagen'>
 
                     <span class='etiqueta-producto'>%s</span>
-
-                    <span class='favorito' aria-hidden='true'>♡</span>
 
                     <img src='/imagenes/%s'
                          alt='%s'
@@ -1159,13 +1166,8 @@ public class PaginaWeb {
 
                     <p class='descripcion'>%s</p>
 
-                    <div class='estrellas'
-                         aria-label='Calificación de cinco estrellas'>
-                        ★★★★★ <span>(%s)</span>
-                    </div>
-
                     <button type='button'>
-                        ＋ Añadir al carrito
+                        Consultar producto
                     </button>
 
                 </div>
@@ -1177,8 +1179,43 @@ public class PaginaWeb {
                 nombre,
                 nombre,
                 precio,
-                descripcion,
-                resenas
+                descripcion
+            );
+    }
+
+    private static String album(
+        String titulo,
+        String imagen,
+        String descripcion
+    ) {
+
+        return """
+            <article class='album'>
+
+                <div class='album-imagen'>
+                    <img src='/imagenes/%s'
+                         alt='Portada de %s'
+                         loading='lazy'>
+                </div>
+
+                <div>
+
+                    <p class='album-etiqueta'>
+                        REFERENCIA MUSICAL
+                    </p>
+
+                    <h3>%s</h3>
+
+                    <p class='album-descripcion'>%s</p>
+
+                </div>
+
+            </article>
+            """.formatted(
+                imagen,
+                titulo,
+                titulo,
+                descripcion
             );
     }
 }

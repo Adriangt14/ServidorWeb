@@ -86,7 +86,7 @@ public class ManejadorCliente {
                     salida,
                     "HTTP/1.1 400 Bad Request",
                     paginaError(
-                        "Solicitud invalida",
+                        "Solicitud inválida",
                         nombreHilo
                     )
                 );
@@ -219,7 +219,7 @@ public class ManejadorCliente {
             if (linea.length() >= maxLongitud) {
 
                 throw new IOException(
-                    "Linea HTTP demasiado larga"
+                    "Línea HTTP demasiado larga"
                 );
             }
 
@@ -249,13 +249,7 @@ public class ManejadorCliente {
                 "/producto/".length()
             );
 
-        return id.equals("1") ||
-               id.equals("2") ||
-               id.equals("3") ||
-               id.equals("4") ||
-               id.equals("5") ||
-               id.equals("6") ||
-               id.equals("7");
+        return id.matches("[1-6]");
     }
 
     private static String paginaError(
@@ -344,22 +338,16 @@ public class ManejadorCliente {
                     .toLowerCase(Locale.ROOT);
         }
 
-        String tipoContenido;
+        String tipoContenido = switch (extension) {
 
-        switch (extension) {
+            case ".png" -> "image/png";
 
-            case ".png" ->
-                tipoContenido = "image/png";
+            case ".jpg", ".jpeg" -> "image/jpeg";
 
-            case ".jpg", ".jpeg" ->
-                tipoContenido = "image/jpeg";
+            case ".webp" -> "image/webp";
 
-            case ".webp" ->
-                tipoContenido = "image/webp";
-
-            default ->
-                tipoContenido = null;
-        }
+            default -> null;
+        };
 
         OutputStream salida =
             clienteSocket.getOutputStream();
