@@ -8,7 +8,10 @@ import java.util.concurrent.TimeUnit;
 
 public final class LimitadorSolicitudes {
 
-    private static final int MAX_SOLICITUDES_POR_VENTANA = 120;
+    // Ventanas independientes: las imágenes de una página no consumen
+    // el mismo cupo que la navegación HTML.
+    private static final int MAX_PAGINAS_POR_VENTANA = 120;
+    private static final int MAX_IMAGENES_POR_VENTANA = 600;
 
     private static final long VENTANA_NANOS =
         TimeUnit.SECONDS.toNanos(60);
@@ -16,7 +19,7 @@ public final class LimitadorSolicitudes {
     private static final long INACTIVIDAD_NANOS =
         TimeUnit.MINUTES.toNanos(5);
 
-    private static final int MAX_IPS_REGISTRADAS = 10_000;
+    private static final int MAX_CLAVES_REGISTRADAS = 20_000;
 
     private static final Map<String, VentanaIP> ventanas =
         new HashMap<>();
@@ -33,29 +36,43 @@ public final class LimitadorSolicitudes {
     ) {
     }
 
-    public static synchronized Resultado comprobar(String ip) {
+    // Compatibilidad para llamadas existentes: limita solicitudes de páginas.
+    public static Resultado comprobar(String ip) {
+        return comprobar(ip, false);
+    }
 
-        String clave = (ip == null || ip.isBlank())
+    /**
+     * Comprueba el límite de navegación o el límite de recursos estáticos.
+     * Las imágenes tienen un cupo separado para que una carga normal del
+     * catálogo no agote el límite de las páginas.
+     */
+    public static synchronized Resultado comprobar(
+        String ip,
+        boolean recursoImagen
+    ) {
+        String direccion = (ip == null || ip.isBlank())
             ? "desconocida"
-            : ip;
+            : ip.trim();
+
+        String clave = direccion + (recursoImagen ? "\u0000IMG" : "\u0000WEB");
+        int limiteSolicitudes = recursoImagen
+            ? MAX_IMAGENES_POR_VENTANA
+            : MAX_PAGINAS_POR_VENTANA;
 
         long ahora = System.nanoTime();
         comprobaciones++;
 
         if (comprobaciones % 256 == 0 ||
             ahora - ultimaLimpiezaNanos >= TimeUnit.SECONDS.toNanos(30)) {
-
             limpiarVentanasInactivas(ahora);
         }
 
         VentanaIP ventana = ventanas.get(clave);
 
         if (ventana == null) {
-
-            if (ventanas.size() >= MAX_IPS_REGISTRADAS) {
+            if (ventanas.size() >= MAX_CLAVES_REGISTRADAS) {
                 limpiarVentanasInactivas(ahora);
-
-                if (ventanas.size() >= MAX_IPS_REGISTRADAS) {
+                if (ventanas.size() >= MAX_CLAVES_REGISTRADAS) {
                     return new Resultado(false, 60);
                 }
             }
@@ -66,32 +83,23 @@ public final class LimitadorSolicitudes {
 
         ventana.ultimaActividadNanos = ahora;
 
-        while (
-            !ventana.marcasDeTiempo.isEmpty() &&
-            ahora - ventana.marcasDeTiempo.peekFirst() >= VENTANA_NANOS
-        ) {
+        while (!ventana.marcasDeTiempo.isEmpty() &&
+               ahora - ventana.marcasDeTiempo.peekFirst() >= VENTANA_NANOS) {
             ventana.marcasDeTiempo.removeFirst();
         }
 
-        if (ventana.marcasDeTiempo.size() >= MAX_SOLICITUDES_POR_VENTANA) {
-
-            long transcurrido =
-                ahora - ventana.marcasDeTiempo.peekFirst();
-
-            long restante =
-                Math.max(1L, VENTANA_NANOS - transcurrido);
-
+        if (ventana.marcasDeTiempo.size() >= limiteSolicitudes) {
+            long transcurrido = ahora - ventana.marcasDeTiempo.peekFirst();
+            long restante = Math.max(1L, VENTANA_NANOS - transcurrido);
             long segundos = Math.max(
                 1L,
                 (restante + TimeUnit.SECONDS.toNanos(1) - 1)
                     / TimeUnit.SECONDS.toNanos(1)
             );
-
             return new Resultado(false, segundos);
         }
 
         ventana.marcasDeTiempo.addLast(ahora);
-
         return new Resultado(true, 0);
     }
 
