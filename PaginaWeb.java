@@ -18,7 +18,7 @@ public class PaginaWeb {
         ),
         new Miembro(
             "No me subo a motos",
-            "Jose_Dictador.jpeg",
+            "Jose_Dictador.png",
             "Cuidado con la ventana del carro",
             "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro, nos cago el codigo tambien xd"
         ),
