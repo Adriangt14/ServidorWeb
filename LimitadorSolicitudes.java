@@ -1,150 +1,160 @@
-
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public final class LimitadorSolicitudes {
 
-    // Ventanas independientes: las imágenes de una página no consumen
-    // el mismo cupo que la navegación HTML.
     private static final int MAX_PAGINAS_POR_VENTANA = 120;
     private static final int MAX_IMAGENES_POR_VENTANA = 600;
+    private static final int MAX_SOLICITUDES_TOTALES_POR_VENTANA = 900;
+    private static final int MAX_IPS_REGISTRADAS = 10_000;
 
     private static final long VENTANA_NANOS =
         TimeUnit.SECONDS.toNanos(60);
-
     private static final long INACTIVIDAD_NANOS =
         TimeUnit.MINUTES.toNanos(5);
+    private static final long INTERVALO_LIMPIEZA_NANOS =
+        TimeUnit.SECONDS.toNanos(5);
 
-    private static final int MAX_CLAVES_REGISTRADAS = 20_000;
-
-    private static final Map<String, VentanaIP> ventanas =
-        new HashMap<>();
-
-    private static long comprobaciones;
-    private static long ultimaLimpiezaNanos = System.nanoTime();
+    private static final ConcurrentHashMap<String, LimitesCliente> clientes =
+        new ConcurrentHashMap<>();
+    private static final Object BLOQUEO_NUEVAS_IPS = new Object();
+    private static volatile long ultimaLimpiezaNanos =
+        System.nanoTime() - INTERVALO_LIMPIEZA_NANOS;
 
     private LimitadorSolicitudes() {
     }
 
-    public record Resultado(
-        boolean permitido,
-        long retryAfterSegundos
-    ) {
+    public record Resultado(boolean permitido, long retryAfterSegundos) {
     }
 
-    // Límites separados por recurso y límite global por IP.
-    private static final int MAX_SOLICITUDES_TOTALES_POR_VENTANA = 900;
-
-    // Límite general: se aplica antes de validar método y ruta para que las
-    // peticiones malformadas o no permitidas también consuman una cuota.
     public static Resultado comprobarGlobal(String ip) {
-        return comprobarVentana(
-            ip,
-            "\u0000ALL",
-            MAX_SOLICITUDES_TOTALES_POR_VENTANA
-        );
+        LimitesCliente cliente = obtenerCliente(ip);
+        if (cliente == null) {
+            return new Resultado(false, 60);
+        }
+        return cliente.global.consumir();
     }
 
-    // Compatibilidad: si se llama con una sola IP, se trata como una página.
     public static Resultado comprobar(String ip) {
         return comprobar(ip, false);
     }
 
-    /** Aplica una cuota específica a páginas o imágenes. */
     public static Resultado comprobar(String ip, boolean recursoImagen) {
-        String tipo = recursoImagen ? "\u0000IMG" : "\u0000WEB";
-        int limite = recursoImagen
-            ? MAX_IMAGENES_POR_VENTANA
-            : MAX_PAGINAS_POR_VENTANA;
-
-        return comprobarVentana(ip, tipo, limite);
+        LimitesCliente cliente = obtenerCliente(ip);
+        if (cliente == null) {
+            return new Resultado(false, 60);
+        }
+        return recursoImagen
+            ? cliente.imagenes.consumir()
+            : cliente.paginas.consumir();
     }
 
-    private static synchronized Resultado comprobarVentana(
-        String ip,
-        String tipo,
-        int limiteSolicitudes
-    ) {
-        String direccion = (ip == null || ip.isBlank())
+    private static LimitesCliente obtenerCliente(String ipOriginal) {
+        String ip = (ipOriginal == null || ipOriginal.isBlank())
             ? "desconocida"
-            : ip.trim();
+            : ipOriginal.trim();
 
-        String clave = direccion + tipo;
-        long ahora = System.nanoTime();
-        comprobaciones++;
-
-        if (comprobaciones % 256 == 0 ||
-            ahora - ultimaLimpiezaNanos >= TimeUnit.SECONDS.toNanos(30)) {
-            limpiarVentanasInactivas(ahora);
-        }
-
-        VentanaIP ventana = ventanas.get(clave);
-
-        if (ventana == null) {
-            if (ventanas.size() >= MAX_CLAVES_REGISTRADAS) {
-                limpiarVentanasInactivas(ahora);
-                if (ventanas.size() >= MAX_CLAVES_REGISTRADAS) {
-                    return new Resultado(false, 60);
+        while (true) {
+            long ahora = System.nanoTime();
+            LimitesCliente existente = clientes.get(ip);
+            if (existente != null) {
+                existente.tocar(ahora);
+                if (clientes.get(ip) == existente) {
+                    return existente;
                 }
+                continue;
             }
 
-            ventana = new VentanaIP();
-            ventanas.put(clave, ventana);
+            synchronized (BLOQUEO_NUEVAS_IPS) {
+                existente = clientes.get(ip);
+                if (existente != null) {
+                    existente.tocar(ahora);
+                    return existente;
+                }
+
+                if (clientes.size() >= MAX_IPS_REGISTRADAS) {
+                    if (ahora - ultimaLimpiezaNanos >= INTERVALO_LIMPIEZA_NANOS) {
+                        limpiarInactivos(ahora);
+                    }
+                    if (clientes.size() >= MAX_IPS_REGISTRADAS) {
+                        return null;
+                    }
+                }
+
+                LimitesCliente nuevo = new LimitesCliente(ahora);
+                clientes.put(ip, nuevo);
+                return nuevo;
+            }
         }
-
-        ventana.ultimaActividadNanos = ahora;
-
-        while (!ventana.marcasDeTiempo.isEmpty() &&
-               ahora - ventana.marcasDeTiempo.peekFirst() >= VENTANA_NANOS) {
-            ventana.marcasDeTiempo.removeFirst();
-        }
-
-        if (ventana.marcasDeTiempo.size() >= limiteSolicitudes) {
-            long transcurrido = ahora - ventana.marcasDeTiempo.peekFirst();
-            long restante = Math.max(1L, VENTANA_NANOS - transcurrido);
-            long segundos = Math.max(
-                1L,
-                (restante + TimeUnit.SECONDS.toNanos(1) - 1)
-                    / TimeUnit.SECONDS.toNanos(1)
-            );
-            return new Resultado(false, segundos);
-        }
-
-        ventana.marcasDeTiempo.addLast(ahora);
-        return new Resultado(true, 0);
     }
 
-    private static void limpiarVentanasInactivas(long ahora) {
-
-        Iterator<Map.Entry<String, VentanaIP>> iterador =
-            ventanas.entrySet().iterator();
+    private static void limpiarInactivos(long ahora) {
+        Iterator<Map.Entry<String, LimitesCliente>> iterador =
+            clientes.entrySet().iterator();
 
         while (iterador.hasNext()) {
+            Map.Entry<String, LimitesCliente> entrada = iterador.next();
+            LimitesCliente cliente = entrada.getValue();
 
-            Map.Entry<String, VentanaIP> entrada =
-                iterador.next();
-
-            if (
-                ahora - entrada.getValue().ultimaActividadNanos
-                    >= INACTIVIDAD_NANOS
-            ) {
-                iterador.remove();
+            synchronized (cliente) {
+                if (ahora - cliente.ultimaActividadNanos >= INACTIVIDAD_NANOS) {
+                    clientes.remove(entrada.getKey(), cliente);
+                }
             }
         }
-
         ultimaLimpiezaNanos = ahora;
     }
 
-    private static final class VentanaIP {
+    private static final class LimitesCliente {
+        private final TokenBucket global = new TokenBucket(
+            MAX_SOLICITUDES_TOTALES_POR_VENTANA, VENTANA_NANOS);
+        private final TokenBucket paginas = new TokenBucket(
+            MAX_PAGINAS_POR_VENTANA, VENTANA_NANOS);
+        private final TokenBucket imagenes = new TokenBucket(
+            MAX_IMAGENES_POR_VENTANA, VENTANA_NANOS);
+        private volatile long ultimaActividadNanos;
 
-        private final Deque<Long> marcasDeTiempo =
-            new ArrayDeque<>();
+        private LimitesCliente(long ahora) {
+            ultimaActividadNanos = ahora;
+        }
 
-        private long ultimaActividadNanos =
-            System.nanoTime();
+        private synchronized void tocar(long ahora) {
+            ultimaActividadNanos = ahora;
+        }
+    }
+
+    private static final class TokenBucket {
+        private final double capacidad;
+        private final double tokensPorNano;
+        private double tokens;
+        private long ultimoRefillNanos;
+
+        private TokenBucket(int capacidad, long ventanaNanos) {
+            this.capacidad = capacidad;
+            this.tokensPorNano = capacidad / (double) ventanaNanos;
+            this.tokens = capacidad;
+            this.ultimoRefillNanos = System.nanoTime();
+        }
+
+        private synchronized Resultado consumir() {
+            long ahora = System.nanoTime();
+            long transcurrido = Math.max(0L, ahora - ultimoRefillNanos);
+            tokens = Math.min(capacidad, tokens + transcurrido * tokensPorNano);
+            ultimoRefillNanos = ahora;
+
+            if (tokens >= 1.0d) {
+                tokens -= 1.0d;
+                return new Resultado(true, 0);
+            }
+
+            double nanosNecesarios = (1.0d - tokens) / tokensPorNano;
+            long segundos = Math.max(
+                1L,
+                (long) Math.ceil(nanosNecesarios / TimeUnit.SECONDS.toNanos(1))
+            );
+            return new Resultado(false, segundos);
+        }
     }
 }
