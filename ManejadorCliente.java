@@ -13,7 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +27,7 @@ public class ManejadorCliente {
     private static final int MAX_CABECERAS_HTTP = 50;
     private static final int MAX_BYTES_CABECERAS = 16_384;
     private static final long MAX_TAMANO_IMAGEN_BYTES = 8L * 1024 * 1024;
+    private static volatile Path carpetaImagenesCache;
 
 
     public static void atender(Socket clienteSocket, String id) {
@@ -356,19 +359,15 @@ public class ManejadorCliente {
             return;
         }
 
-        // No dependemos exclusivamente del directorio desde el que se ejecutó
-        // Java. VS Code/IntelliJ pueden arrancar el proceso desde bin/, out/ o
-        // desde la raíz del proyecto. Buscamos la carpeta imagenes en ambos
-        // puntos y en sus directorios padre.
         Path carpeta;
         try {
             carpeta = localizarCarpetaImagenes();
         } catch (IOException e) {
-            System.err.println("[IMG] " + e.getMessage());
+            System.err.println("[IMG] No se pudo localizar la carpeta imagenes: " + e.getMessage());
             enviarTexto(
                 socket,
-                "HTTP/1.1 404 Not Found",
-                paginaError("No se encontró la carpeta de imágenes del servidor.")
+                "HTTP/1.1 500 Internal Server Error",
+                paginaError(500, "Error de configuración", "El servidor no encuentra la carpeta de imágenes.")
             );
             return;
         }
@@ -379,15 +378,19 @@ public class ManejadorCliente {
             !candidato.startsWith(carpeta) ||
             !Files.isRegularFile(candidato)
         ) {
-            System.err.println(
-                "[IMG] No se encontró: " + nombre + " | carpeta buscada: " + carpeta
-            );
-            enviarTexto(
-                socket,
-                "HTTP/1.1 404 Not Found",
-                paginaError("Imagen no encontrada. Verifica el nombre y la carpeta imagenes.")
-            );
-            return;
+            // Fallback opcional para diferencias de mayúsculas/minúsculas en nombres.
+            Path alternativo = buscarNombreSinDistinguirMayusculas(carpeta, nombre);
+            if (alternativo != null) {
+                candidato = alternativo;
+            } else {
+                System.err.println("[IMG] Archivo no encontrado: " + nombre + " | carpeta: " + carpeta);
+                enviarTexto(
+                    socket,
+                    "HTTP/1.1 404 Not Found",
+                    paginaError("Imagen no encontrada: " + nombre)
+                );
+                return;
+            }
         }
 
         Path archivo = candidato.toRealPath();
@@ -458,55 +461,85 @@ public class ManejadorCliente {
     }
 
     /**
-     * Localiza la carpeta real de imágenes usando el directorio de trabajo y
-     * la ubicación desde donde se cargó esta clase. Esto evita los 404 cuando
-     * IntelliJ o VS Code ejecutan los .class desde una carpeta de salida.
+     * Busca la carpeta de imágenes sin depender exclusivamente del directorio
+     * desde el que se ejecutó java. También funciona si las clases están en
+     * una carpeta de compilación como bin/ o build/classes/.
      */
     private static Path localizarCarpetaImagenes() throws IOException {
-        Path directorioTrabajo = Paths.get("").toAbsolutePath().normalize();
-        Path directorioClases = null;
+        Path cache = carpetaImagenesCache;
+        if (cache != null && Files.isDirectory(cache)) {
+            return cache;
+        }
+
+        List<Path> candidatos = new ArrayList<>();
+
+        String configurada = System.getProperty("nexus.imagenes.dir");
+        if (configurada != null && !configurada.isBlank()) {
+            agregarCandidato(candidatos, Paths.get(configurada));
+        }
+
+        Path directorioActual = Paths.get("").toAbsolutePath().normalize();
+        agregarCandidato(candidatos, directorioActual.resolve("imagenes"));
 
         try {
-            directorioClases = Paths.get(
+            Path ubicacionClases = Paths.get(
                 ManejadorCliente.class.getProtectionDomain()
                     .getCodeSource().getLocation().toURI()
             ).toAbsolutePath().normalize();
+
+            Path base = Files.isDirectory(ubicacionClases)
+                ? ubicacionClases
+                : ubicacionClases.getParent();
+
+            for (int nivel = 0; base != null && nivel < 4; nivel++) {
+                agregarCandidato(candidatos, base.resolve("imagenes"));
+                base = base.getParent();
+            }
         } catch (Exception e) {
-            System.err.println(
-                "[IMG] No se pudo resolver la ubicación de las clases; se usará el directorio actual."
-            );
+            System.err.println("[IMG] No se pudo inspeccionar la ubicación de las clases: " + e.getMessage());
         }
 
-        Path[] puntosDePartida = { directorioTrabajo, directorioClases };
-
-        for (Path inicio : puntosDePartida) {
-            if (inicio == null) {
-                continue;
-            }
-
-            Path cursor = Files.isRegularFile(inicio) ? inicio.getParent() : inicio;
-
-            for (int nivel = 0; cursor != null && nivel < 10; nivel++, cursor = cursor.getParent()) {
-                Path[] candidatos = {
-                    cursor.resolve("imagenes").normalize(),
-                    cursor.resolve("src").resolve("imagenes").normalize(),
-                    cursor.resolve("src").resolve("main").resolve("resources")
-                        .resolve("imagenes").normalize()
-                };
-
-                for (Path candidato : candidatos) {
-                    if (Files.isDirectory(candidato)) {
-                        Path real = candidato.toRealPath();
-                        System.out.println("[IMG] Directorio de imágenes: " + real);
-                        return real;
-                    }
-                }
+        for (Path candidato : candidatos) {
+            if (Files.isDirectory(candidato)) {
+                Path real = candidato.toRealPath();
+                carpetaImagenesCache = real;
+                System.out.println("[IMG] Directorio de imágenes: " + real);
+                return real;
             }
         }
 
         throw new IOException(
-            "No se encontró la carpeta 'imagenes'. Directorio actual: " + directorioTrabajo
+            "No se encontró la carpeta 'imagenes'. Directorio actual: " +
+            directorioActual + ". Rutas probadas: " + candidatos
         );
+    }
+
+    private static void agregarCandidato(List<Path> candidatos, Path ruta) {
+        Path normalizada = ruta.toAbsolutePath().normalize();
+        if (!candidatos.contains(normalizada)) {
+            candidatos.add(normalizada);
+        }
+    }
+
+    private static Path buscarNombreSinDistinguirMayusculas(
+        Path carpeta,
+        String nombre
+    ) throws IOException {
+        try (var archivos = Files.list(carpeta)) {
+            List<Path> coincidencias = archivos
+                .filter(Files::isRegularFile)
+                .filter(p -> p.getFileName().toString().equalsIgnoreCase(nombre))
+                .limit(2)
+                .toList();
+
+            // No elige arbitrariamente si dos nombres solo difieren en el caso.
+            if (coincidencias.size() == 1) {
+                System.err.println("[IMG] Nombre corregido por mayúsculas/minúsculas: " +
+                    nombre + " -> " + coincidencias.get(0).getFileName());
+                return coincidencias.get(0).normalize();
+            }
+            return null;
+        }
     }
 
     private static String tipoContenidoImagen(String nombre) {
