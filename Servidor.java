@@ -7,7 +7,7 @@ import java.net.Socket;
 public class Servidor {
 
     private static final int PUERTO = 8080;
-    private static final int HILOS = 10;
+    private static final int HILOS = 24;
     private static final int COLA_MAXIMA = 300;
     private static final int BACKLOG = 300;
 

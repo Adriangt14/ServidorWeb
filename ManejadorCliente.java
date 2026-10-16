@@ -12,6 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +29,22 @@ public class ManejadorCliente {
     private static final int MAX_CABECERAS_HTTP = 50;
     private static final int MAX_BYTES_CABECERAS = 16_384;
     private static final long MAX_TAMANO_IMAGEN_BYTES = 8L * 1024 * 1024;
+    private static final long MAX_CACHE_IMAGENES_BYTES = 32L * 1024 * 1024;
+    private static final Pattern PATRON_ESPACIOS = Pattern.compile("\\s+");
+    private static final Pattern PATRON_NOMBRE_CABECERA =
+        Pattern.compile("[!#$%&'*+.^_`|~0-9a-z-]+");
+    private static final Pattern PATRON_IPV4 =
+        Pattern.compile("[0-9]{1,3}(\\.[0-9]{1,3}){3}");
+    private static final Pattern PATRON_PUNTOS = Pattern.compile("\\.");
+    private static final Pattern PATRON_IPV6 =
+        Pattern.compile("[0-9a-fA-F:.]+");
+
+    private static final ConcurrentHashMap<Path, byte[]> CACHE_IMAGENES =
+        new ConcurrentHashMap<>();
+    private static final Object BLOQUEO_CACHE_IMAGENES = new Object();
+    private static volatile long bytesCacheImagenes;
+    private static final AtomicLong TIMEOUTS_LECTURA = new AtomicLong();
+    private static final AtomicLong ERRORES_IO = new AtomicLong();
     private static volatile Path carpetaImagenesCache;
 
 
@@ -100,11 +119,11 @@ public class ManejadorCliente {
                 return;
             }
 
-            String[] partes = peticion.trim().split("\\s+");
+            String[] partes = PATRON_ESPACIOS.split(peticion.trim());
 
             if (
                 partes.length != 3 ||
-                !partes[2].matches("HTTP/1\\.[01]")
+                !(partes[2].equals("HTTP/1.0") || partes[2].equals("HTTP/1.1"))
             ) {
 
                 enviarTexto(
@@ -202,7 +221,7 @@ public class ManejadorCliente {
                 return;
             }
 
-            String pagina = PaginaWeb.generar(ruta, hilo);
+            byte[] pagina = PaginaWeb.generarBytes(ruta, hilo);
 
             enviarTexto(
                 clienteSocket,
@@ -211,17 +230,21 @@ public class ManejadorCliente {
             );
 
         } catch (SocketTimeoutException e) {
-
-            System.err.println(
-                "[" + hilo + "] Tiempo de lectura agotado: " + ip
-            );
+            long total = TIMEOUTS_LECTURA.incrementAndGet();
+            if (total == 1 || total % 100 == 0) {
+                System.err.println(
+                    "[LECTURA] Tiempos agotados: " + total + " | última IP: " + ip
+                );
+            }
 
         } catch (IOException e) {
-
-            System.err.println(
-                "[" + hilo + "] Error atendiendo solicitud: " +
-                e.getMessage()
-            );
+            long total = ERRORES_IO.incrementAndGet();
+            if (total == 1 || total % 100 == 0) {
+                System.err.println(
+                    "[IO] Errores atendiendo solicitudes: " + total +
+                    " | último error: " + e.getMessage()
+                );
+            }
 
         } finally {
 
@@ -315,10 +338,28 @@ public class ManejadorCliente {
         String pagina,
         long retryAfterSegundos
     ) throws IOException {
+        enviarTexto(
+            socket,
+            estado,
+            pagina.getBytes(StandardCharsets.UTF_8),
+            retryAfterSegundos
+        );
+    }
 
-        byte[] cuerpo =
-            pagina.getBytes(StandardCharsets.UTF_8);
+    private static void enviarTexto(
+        Socket socket,
+        String estado,
+        byte[] cuerpo
+    ) throws IOException {
+        enviarTexto(socket, estado, cuerpo, 0);
+    }
 
+    private static void enviarTexto(
+        Socket socket,
+        String estado,
+        byte[] cuerpo,
+        long retryAfterSegundos
+    ) throws IOException {
         String encabezados =
             estado + "\r\n" +
             "Content-Type: text/html; charset=UTF-8\r\n" +
@@ -332,11 +373,7 @@ public class ManejadorCliente {
             "Connection: close\r\n\r\n";
 
         OutputStream salida = socket.getOutputStream();
-
-        salida.write(
-            encabezados.getBytes(StandardCharsets.UTF_8)
-        );
-
+        salida.write(encabezados.getBytes(StandardCharsets.UTF_8));
         salida.write(cuerpo);
         salida.flush();
     }
@@ -468,20 +505,64 @@ public class ManejadorCliente {
             return;
         }
 
-        byte[] imagen = Files.readAllBytes(archivo);
+        byte[] imagen = obtenerImagenCacheada(archivo, tamano);
+        long tamanoRespuesta = imagen != null ? imagen.length : tamano;
 
         String encabezados =
             "HTTP/1.1 200 OK\r\n" +
             "Content-Type: " + tipo + "\r\n" +
-            "Content-Length: " + imagen.length + "\r\n" +
+            "Content-Length: " + tamanoRespuesta + "\r\n" +
             "X-Content-Type-Options: nosniff\r\n" +
             "Cache-Control: public, max-age=3600\r\n" +
             "Connection: close\r\n\r\n";
 
         OutputStream salida = socket.getOutputStream();
         salida.write(encabezados.getBytes(StandardCharsets.UTF_8));
-        salida.write(imagen);
+        if (imagen != null) {
+            salida.write(imagen);
+        } else {
+            // Copia por bloques para no crear un byte[] del tamaño del archivo en cada petición.
+            Files.copy(archivo, salida);
+        }
         salida.flush();
+    }
+
+    private static byte[] obtenerImagenCacheada(Path archivo, long tamanoArchivo)
+        throws IOException {
+
+        byte[] existente = CACHE_IMAGENES.get(archivo);
+        if (existente != null) {
+            return existente;
+        }
+
+        if (tamanoArchivo > MAX_CACHE_IMAGENES_BYTES ||
+            bytesCacheImagenes + tamanoArchivo > MAX_CACHE_IMAGENES_BYTES) {
+            return null;
+        }
+
+        // Solo se bloquea durante la carga inicial de un recurso; las lecturas
+        // posteriores consultan el mapa concurrente sin esperar este monitor.
+        synchronized (BLOQUEO_CACHE_IMAGENES) {
+            existente = CACHE_IMAGENES.get(archivo);
+            if (existente != null) {
+                return existente;
+            }
+
+            if (tamanoArchivo > MAX_CACHE_IMAGENES_BYTES ||
+                bytesCacheImagenes + tamanoArchivo > MAX_CACHE_IMAGENES_BYTES) {
+                return null;
+            }
+
+            byte[] datos = Files.readAllBytes(archivo);
+            if (datos.length > MAX_CACHE_IMAGENES_BYTES ||
+                bytesCacheImagenes + datos.length > MAX_CACHE_IMAGENES_BYTES) {
+                return null;
+            }
+
+            CACHE_IMAGENES.put(archivo, datos);
+            bytesCacheImagenes += datos.length;
+            return datos;
+        }
     }
 
     /**
@@ -648,7 +729,7 @@ public class ManejadorCliente {
             }
 
             String nombre = linea.substring(0, separador).trim().toLowerCase(Locale.ROOT);
-            if (!nombre.matches("[!#$%&'*+.^_`|~0-9a-z-]+")) {
+            if (!PATRON_NOMBRE_CABECERA.matcher(nombre).matches()) {
                 throw new CabecerasInvalidasException("Nombre de cabecera HTTP no válido.");
             }
 
@@ -692,8 +773,8 @@ public class ManejadorCliente {
 
         String ip = candidata.trim();
 
-        if (ip.matches("[0-9]{1,3}(\\.[0-9]{1,3}){3}")) {
-            String[] octetos = ip.split("\\.");
+        if (PATRON_IPV4.matcher(ip).matches()) {
+            String[] octetos = PATRON_PUNTOS.split(ip, -1);
             StringBuilder canonica = new StringBuilder();
             for (int i = 0; i < octetos.length; i++) {
                 int valor;
@@ -713,7 +794,7 @@ public class ManejadorCliente {
 
         // Se permiten únicamente caracteres de una dirección IPv6 literal.
         // El ':' impide que InetAddress intente resolver un nombre DNS.
-        if (ip.indexOf(':') >= 0 && ip.matches("[0-9a-fA-F:.]+")) {
+        if (ip.indexOf(':') >= 0 && PATRON_IPV6.matcher(ip).matches()) {
             try {
                 InetAddress direccion = InetAddress.getByName(ip);
                 return direccion.getHostAddress().toLowerCase(Locale.ROOT);

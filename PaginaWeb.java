@@ -1,4 +1,6 @@
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class PaginaWeb {
@@ -298,8 +300,36 @@ public class PaginaWeb {
 
     );
 
-    public static String generar(String ruta, String hilo) {
+    private static final ConcurrentHashMap<String, String> CACHE_PAGINAS =
+        new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, byte[]> CACHE_PAGINAS_BYTES =
+        new ConcurrentHashMap<>();
 
+    public static String generar(String ruta, String hilo) {
+        if (ruta == null || esRutaDinamica(ruta) || !Rutas.esPaginaValida(ruta)) {
+            return generarSinCache(ruta, hilo);
+        }
+        return CACHE_PAGINAS.computeIfAbsent(
+            ruta,
+            clave -> generarSinCache(clave, hilo)
+        );
+    }
+
+    public static byte[] generarBytes(String ruta, String hilo) {
+        if (ruta == null || esRutaDinamica(ruta) || !Rutas.esPaginaValida(ruta)) {
+            return generarSinCache(ruta, hilo).getBytes(StandardCharsets.UTF_8);
+        }
+        return CACHE_PAGINAS_BYTES.computeIfAbsent(
+            ruta,
+            clave -> generar(clave, hilo).getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+    private static boolean esRutaDinamica(String ruta) {
+        return Rutas.SOLICITUDES.equals(ruta) || Rutas.HILOS.equals(ruta);
+    }
+
+    private static String generarSinCache(String ruta, String hilo) {
         String contenido;
 
         if (ruta.equals(Rutas.INICIO) ||

@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class LimitadorSolicitudes {
 
@@ -10,12 +11,9 @@ public final class LimitadorSolicitudes {
     private static final int MAX_SOLICITUDES_TOTALES_POR_VENTANA = 900;
     private static final int MAX_IPS_REGISTRADAS = 10_000;
 
-    private static final long VENTANA_NANOS =
-        TimeUnit.SECONDS.toNanos(60);
-    private static final long INACTIVIDAD_NANOS =
-        TimeUnit.MINUTES.toNanos(5);
-    private static final long INTERVALO_LIMPIEZA_NANOS =
-        TimeUnit.SECONDS.toNanos(5);
+    private static final long VENTANA_NANOS = TimeUnit.SECONDS.toNanos(60);
+    private static final long INACTIVIDAD_NANOS = TimeUnit.MINUTES.toNanos(5);
+    private static final long INTERVALO_LIMPIEZA_NANOS = TimeUnit.SECONDS.toNanos(5);
 
     private static final ConcurrentHashMap<String, LimitesCliente> clientes =
         new ConcurrentHashMap<>();
@@ -31,10 +29,9 @@ public final class LimitadorSolicitudes {
 
     public static Resultado comprobarGlobal(String ip) {
         LimitesCliente cliente = obtenerCliente(ip);
-        if (cliente == null) {
-            return new Resultado(false, 60);
-        }
-        return cliente.global.consumir();
+        return cliente == null
+            ? new Resultado(false, 60)
+            : cliente.global.consumir();
     }
 
     public static Resultado comprobar(String ip) {
@@ -60,18 +57,20 @@ public final class LimitadorSolicitudes {
             long ahora = System.nanoTime();
             LimitesCliente existente = clientes.get(ip);
             if (existente != null) {
-                existente.tocar(ahora);
-                if (clientes.get(ip) == existente) {
+                if (existente.tocar(ahora) && clientes.get(ip) == existente) {
                     return existente;
                 }
+                clientes.remove(ip, existente);
                 continue;
             }
 
             synchronized (BLOQUEO_NUEVAS_IPS) {
                 existente = clientes.get(ip);
                 if (existente != null) {
-                    existente.tocar(ahora);
-                    return existente;
+                    if (existente.tocar(ahora)) {
+                        return existente;
+                    }
+                    clientes.remove(ip, existente);
                 }
 
                 if (clientes.size() >= MAX_IPS_REGISTRADAS) {
@@ -97,64 +96,102 @@ public final class LimitadorSolicitudes {
         while (iterador.hasNext()) {
             Map.Entry<String, LimitesCliente> entrada = iterador.next();
             LimitesCliente cliente = entrada.getValue();
-
-            synchronized (cliente) {
-                if (ahora - cliente.ultimaActividadNanos >= INACTIVIDAD_NANOS) {
-                    clientes.remove(entrada.getKey(), cliente);
-                }
+            if (cliente.expirarSiInactivo(ahora, INACTIVIDAD_NANOS)) {
+                clientes.remove(entrada.getKey(), cliente);
             }
         }
         ultimaLimpiezaNanos = ahora;
     }
 
     private static final class LimitesCliente {
-        private final TokenBucket global = new TokenBucket(
+        private final LimitadorAtomico global = new LimitadorAtomico(
             MAX_SOLICITUDES_TOTALES_POR_VENTANA, VENTANA_NANOS);
-        private final TokenBucket paginas = new TokenBucket(
+        private final LimitadorAtomico paginas = new LimitadorAtomico(
             MAX_PAGINAS_POR_VENTANA, VENTANA_NANOS);
-        private final TokenBucket imagenes = new TokenBucket(
+        private final LimitadorAtomico imagenes = new LimitadorAtomico(
             MAX_IMAGENES_POR_VENTANA, VENTANA_NANOS);
-        private volatile long ultimaActividadNanos;
+        // El bit menos significativo indica que la entrada ya fue expirada.
+        // Así se sincroniza el refresco de actividad y la limpieza sin usar monitores.
+        private final AtomicLong estadoActividad;
 
         private LimitesCliente(long ahora) {
-            ultimaActividadNanos = ahora;
+            estadoActividad = new AtomicLong(ahora & ~1L);
         }
 
-        private synchronized void tocar(long ahora) {
-            ultimaActividadNanos = ahora;
+        private boolean tocar(long ahora) {
+            long nuevoTiempo = ahora & ~1L;
+            while (true) {
+                long estado = estadoActividad.get();
+                if ((estado & 1L) != 0L) {
+                    return false;
+                }
+
+                long anterior = estado & ~1L;
+                if (ahora - anterior <= 0L) {
+                    return true;
+                }
+
+                if (estadoActividad.compareAndSet(estado, nuevoTiempo)) {
+                    return true;
+                }
+            }
+        }
+
+        private boolean expirarSiInactivo(long ahora, long tiempoInactividad) {
+            while (true) {
+                long estado = estadoActividad.get();
+                if ((estado & 1L) != 0L) {
+                    return true;
+                }
+
+                long ultimaActividad = estado & ~1L;
+                if (ahora - ultimaActividad < tiempoInactividad) {
+                    return false;
+                }
+
+                if (estadoActividad.compareAndSet(estado, estado | 1L)) {
+                    return true;
+                }
+            }
         }
     }
 
-    private static final class TokenBucket {
-        private final double capacidad;
-        private final double tokensPorNano;
-        private double tokens;
-        private long ultimoRefillNanos;
+    /* GCRA con CAS: evita bloquear un monitor compartido por todas las peticiones de una IP. */
+    private static final class LimitadorAtomico {
+        private final long intervaloTokenNanos;
+        private final long toleranciaRafagaNanos;
+        private final AtomicLong llegadaTeoricaNanos = new AtomicLong(System.nanoTime());
 
-        private TokenBucket(int capacidad, long ventanaNanos) {
-            this.capacidad = capacidad;
-            this.tokensPorNano = capacidad / (double) ventanaNanos;
-            this.tokens = capacidad;
-            this.ultimoRefillNanos = System.nanoTime();
+        private LimitadorAtomico(int capacidad, long ventanaNanos) {
+            this.intervaloTokenNanos = Math.max(
+                1L,
+                (long) Math.ceil(ventanaNanos / (double) capacidad)
+            );
+            this.toleranciaRafagaNanos = (capacidad - 1L) * intervaloTokenNanos;
         }
 
-        private synchronized Resultado consumir() {
-            long ahora = System.nanoTime();
-            long transcurrido = Math.max(0L, ahora - ultimoRefillNanos);
-            tokens = Math.min(capacidad, tokens + transcurrido * tokensPorNano);
-            ultimoRefillNanos = ahora;
+        private Resultado consumir() {
+            while (true) {
+                long ahora = System.nanoTime();
+                long llegadaAnterior = llegadaTeoricaNanos.get();
+                long instantePermitido = llegadaAnterior - toleranciaRafagaNanos;
 
-            if (tokens >= 1.0d) {
-                tokens -= 1.0d;
-                return new Resultado(true, 0);
+                if (ahora - instantePermitido < 0L) {
+                    long esperaNanos = instantePermitido - ahora;
+                    long retry = Math.max(
+                        1L,
+                        (esperaNanos + TimeUnit.SECONDS.toNanos(1) - 1L)
+                            / TimeUnit.SECONDS.toNanos(1)
+                    );
+                    return new Resultado(false, retry);
+                }
+
+                long base = Math.max(llegadaAnterior, ahora);
+                long siguiente = base + intervaloTokenNanos;
+                if (llegadaTeoricaNanos.compareAndSet(llegadaAnterior, siguiente)) {
+                    return new Resultado(true, 0);
+                }
             }
-
-            double nanosNecesarios = (1.0d - tokens) / tokensPorNano;
-            long segundos = Math.max(
-                1L,
-                (long) Math.ceil(nanosNecesarios / TimeUnit.SECONDS.toNanos(1))
-            );
-            return new Resultado(false, segundos);
         }
     }
 }
