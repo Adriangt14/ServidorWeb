@@ -3,45 +3,33 @@ import java.util.stream.Collectors;
 
 public class PaginaWeb {
 
+    private static final List<Miembro> MIEMBROS = List.of(
+        new Miembro(
+            "El que Carreo el Proyecto y su mujer de LOL",
+            "Qiyana_FigueroaGOAT.png",
+            "THE GOAT",
+            "Este toro carrea proyectos sin pastillas"
+        ),
+        new Miembro(
+            "Enfermeria una noche del viernes 9 de Octubre",
+            "Engelbert.png",
+            "Easter-egg black ops 7",
+            "Se sabe mejor los Easter eggs de Black Ops 7 que el mismo codigo del programa"
+        ),
+        new Miembro(
+            "No me subo a motos",
+            "Jose_Dictador.jpeg",
+            "Unico que no se sube a motos",
+            "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro"
+        )
+    );
+
     private static final List<Producto> PRODUCTOS = List.of(
 
         
 
      
     
-        new Producto(
-            Rutas.RAZER,
-            "El que Carreo el Proyecto y su mujer de LOL",
-            "Consultar precio",
-            "Qiyana_FigueroaGOAT.png",
-            "Este toro carrea proyectos sin pastillas",
-            "THE GOAT",
-            "Miembros del equipo"
-        ),
-        
-
-           new Producto(
-            Rutas.RAZER,
-            "Enfermeria una noche del viernes 9 de Octubre",
-            "Consultar precio",
-            "Engelbert.png",
-            "Se sabe mejor los Easter eggs de Black Ops 7 que el mismo codigo del programa",
-            "Easter-egg black ops 7",
-            "Miembros del equipo"
-        ),
-
-         new Producto(
-            Rutas.RAZER,
-            "No me subo a motos",
-            "Consultar precio",
-            "Jose_Dictador.jpeg",
-            "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro",
-            "Unico que no se sube a motos",
-            "Miembros del equipo"
-        ),
-
-
-
         new Producto(
             Rutas.RAZER,
             "Audífonos Razer",
@@ -54,7 +42,7 @@ public class PaginaWeb {
 
         
         new Producto(
-            Rutas.RAZER,
+            Rutas.EMILIA,
             "Emilia",
             "Consultar precio",
             "Emilia.png",
@@ -65,7 +53,7 @@ public class PaginaWeb {
 
         
         new Producto(
-            Rutas.RAZER,
+            Rutas.NICO_ROBIN,
             "Nico Robin",
             "Consultar precio",
             "Nico_Robin.png",
@@ -114,16 +102,6 @@ public class PaginaWeb {
             "accesorios"
         ),
 
-        new Producto(
-            Rutas.TECLADO,
-            "Teclado mecánico",
-            "Q425.00",
-            "teclado.png",
-            "Teclado para programar, jugar y completar tu setup.",
-            "GAMING",
-            "gaming"
-        ),
-
             //coleccionables nuevos
             new Producto(
                    Rutas.NERO,
@@ -146,31 +124,11 @@ public class PaginaWeb {
             ),
 
             new Producto(
-                    Rutas.YUNO,
-                    "Yuno Funko Pop!",
-                    "Q115.00",
-                    "Yuno_Funko.png",
-                    "Figura funko de Yuno de Black Clover",
-                    "COLECCIÓN",
-                    "coleccion"
-            ),
-
-            new Producto(
                     Rutas.CUADRO,
                     "Cuadro de Asta",
                     "Q75.00",
                     "Cuadro_Asta.png",
                     "Cuadro decorativo de Asta de Black Clover",
-                    "COLECCIÓN",
-                    "coleccion"
-            ),
-
-            new Producto(
-                    Rutas.ZANKA,
-                    "Figura Accion Zanka",
-                    "Q135.00",
-                    "Zanka_Figura.png",
-                    "Figura de Zanka de Gachiakuta",
                     "COLECCIÓN",
                     "coleccion"
             ),
@@ -380,6 +338,10 @@ public class PaginaWeb {
 
     private static String inicio() {
 
+        String miembros = MIEMBROS.stream()
+            .map(PaginaWeb::tarjetaMiembro)
+            .collect(Collectors.joining("\n"));
+
         String productos = PRODUCTOS.stream()
             .map(PaginaWeb::tarjetaProducto)
             .collect(Collectors.joining("\n"));
@@ -398,6 +360,20 @@ public class PaginaWeb {
                         para acompañarte en cada expedición.
                     </p>
                     <a class="boton" href="/tecnologia">Explorar tienda →</a>
+                </div>
+            </section>
+
+            <section class="seccion" id="equipo">
+                <div class="encabezado-seccion">
+                    <div>
+                        <p class="etiqueta">MIEMBROS DEL PROYECTO</p>
+                        <h2>El equipo detrás del código</h2>
+                        <p>Proyecto UMG, cortesía de las decisiones que nos trajeron hasta aquí.</p>
+                    </div>
+                    <span class="contador">%d INTEGRANTES</span>
+                </div>
+                <div class="miembros">
+                    %s
                 </div>
             </section>
 
@@ -438,7 +414,7 @@ public class PaginaWeb {
                     %s
                 </div>
             </section>
-            """.formatted(PRODUCTOS.size(), productos, albums);
+            """.formatted(MIEMBROS.size(), miembros, PRODUCTOS.size(), productos, albums);
     }
 
     private static String paginaCategoria(String ruta) {
@@ -502,6 +478,32 @@ public class PaginaWeb {
                 <div class="albums">%s</div>
             </section>
             """.formatted(tarjetas);
+    }
+
+    private static String tarjetaMiembro(Miembro miembro) {
+
+        return """
+            <article class="miembro">
+                <div class="miembro-imagen">
+                    <img src="/imagenes/%s" alt="%s" loading="lazy">
+                </div>
+
+                <div class="miembro-info">
+                    <div class="miembro-meta">
+                        <span class="etiqueta-miembro">%s</span>
+                        <strong class="miembro-proyecto">Proyecto UMG</strong>
+                    </div>
+                    <h3>%s</h3>
+                    <p class="miembro-descripcion">%s</p>
+                </div>
+            </article>
+            """.formatted(
+                miembro.imagen,
+                miembro.nombre,
+                miembro.etiqueta,
+                miembro.nombre,
+                miembro.descripcion
+            );
     }
 
     private static String tarjetaProducto(Producto producto) {
@@ -834,6 +836,90 @@ public class PaginaWeb {
                         margin-top: 25px;
                     }
 
+                    .miembros {
+                        display: grid;
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                        gap: 20px;
+                        margin-top: 25px;
+                    }
+
+                    .miembro {
+                        display: grid;
+                        grid-template-columns: minmax(105px, 38%) minmax(0, 1fr);
+                        min-width: 0;
+                        overflow: hidden;
+                        background: #eee5d7;
+                        color: #202328;
+                        border: 1px solid #b7a78e;
+                    }
+
+                    .miembro-imagen {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 210px;
+                        padding: 12px;
+                        background: radial-gradient(ellipse, #fffaf1, #e5d9c7 75%, #c9b99e);
+                    }
+
+                    .miembro-imagen img {
+                        display: block;
+                        width: 100%;
+                        height: 100%;
+                        max-height: 260px;
+                        object-fit: contain;
+                    }
+
+                    .miembro-info {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        min-width: 0;
+                        padding: 14px;
+                    }
+
+                    .miembro-meta {
+                        display: flex;
+                        align-items: flex-start;
+                        justify-content: space-between;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        margin-bottom: 11px;
+                    }
+
+                    .etiqueta-miembro {
+                        display: inline-block;
+                        max-width: 100%;
+                        padding: 5px 7px;
+                        background: #151d23;
+                        color: var(--marfil);
+                        font-size: 8px;
+                        font-weight: 600;
+                        letter-spacing: 1px;
+                        line-height: 1.4;
+                        text-transform: uppercase;
+                    }
+
+                    .miembro-proyecto {
+                        color: #202328;
+                        font-size: 10px;
+                        white-space: nowrap;
+                    }
+
+                    .miembro h3 {
+                        margin: 0;
+                        font-size: 14px;
+                        line-height: 1.35;
+                    }
+
+                    .miembro-descripcion {
+                        margin: 12px 0 0;
+                        padding-top: 10px;
+                        border-top: 1px solid #d0c0a8;
+                        color: #64615d;
+                        font-size: 12px;
+                    }
+
                     .producto {
                         display: flex;
                         flex-direction: column;
@@ -1037,6 +1123,10 @@ public class PaginaWeb {
                             grid-template-columns: repeat(2, minmax(0, 1fr));
                         }
 
+                        .miembros {
+                            grid-template-columns: repeat(2, minmax(0, 1fr));
+                        }
+
                         .albums {
                             grid-template-columns: 1fr;
                         }
@@ -1071,6 +1161,23 @@ public class PaginaWeb {
                         .productos {
                             grid-template-columns: repeat(2, minmax(0, 1fr));
                             gap: 12px;
+                        }
+
+                        .miembros {
+                            grid-template-columns: 1fr;
+                        }
+
+                        .miembro {
+                            grid-template-columns: minmax(100px, 32%) minmax(0, 1fr);
+                        }
+
+                        .miembro-imagen {
+                            min-height: 190px;
+                            padding: 8px;
+                        }
+
+                        .miembro-info {
+                            padding: 12px;
                         }
 
                         .producto-imagen {
@@ -1138,6 +1245,7 @@ public class PaginaWeb {
 
                     <nav class="nav-links">
                         <a href="/">Inicio</a>
+                        <a href="#equipo">Equipo</a>
                         <a href="/tecnologia">Tecnología</a>
                         <a href="/gaming">Gaming</a>
                         <a href="/accesorios">Accesorios</a>
@@ -1179,6 +1287,14 @@ public class PaginaWeb {
             """;
 
         return html.replace("{{CONTENIDO}}", contenido);
+    }
+
+    private record Miembro(
+        String nombre,
+        String imagen,
+        String etiqueta,
+        String descripcion
+    ) {
     }
 
     private record Producto(

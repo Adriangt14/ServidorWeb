@@ -2,7 +2,7 @@
 import java.util.Locale;
 
 public final class Rutas {
-
+    //CORRECCIONES CODIGO DE JOSE RIOS
     public static final String INICIO = "/";
     public static final String PRODUCTOS = "/productos";
     public static final String TECNOLOGIA = "/tecnologia";
@@ -17,17 +17,16 @@ public final class Rutas {
     public static final String CLIENTES = "/clientes";
 
     public static final String RAZER = "/productorazer";
+    public static final String EMILIA = "/productoemilia";
+    public static final String NICO_ROBIN = "/productonicorobin";
     public static final String MIKU = "/productomiku";
     public static final String GAREN = "/productogaren";
     public static final String LOGITECH_PRO = "/productologitechpro";
     public static final String LOGITECH_COMBO = "/productologitechcombo";
-    public static final String TECLADO = "/productotecladomecanico";
-    //coleccionables jose
+    //CORRECCIONES CODIGO DE JOSE RIOS
     public static final String NERO = "/productonero";
     public static final String ASTA = "/productoasta";
-    public static final String YUNO = "/productoyuno";
     public static final String CUADRO = "/productocuadro";
-    public static final String ZANKA = "productozanka";
     public static final String RIYO = "/productoriyo";
     public static final String HITSUKI = "/productohitsuki";
     public static final String RUDO = "/productorudo";
@@ -42,16 +41,6 @@ public final class Rutas {
 
     public static final String ALBUM_NOTHING = "/albumnothingbutthebest";
     public static final String ALBUM_VOZ = "/albumlavozdeoro";
-    //albumes goooooooooood
-    public static final String ALBUM_BDTF = "/albumbdtf";
-    public static final String ALBUM_YE = "/albumye";
-    public static final String ALBUM_SWEETACTION = "/albumsweetaction";
-    public static final String ALBUM_UTOPIA = "/albumutopia";
-    public static final String ALBUM_HEROES = "/albumheoresandvillains";
-    public static final String ALBUM_OCTANE = "/albumoctane";
-    public static final String ALBUM_DATA = "/albumdata";
-    public static final String ALBUM_ULTIMOTOUR = "/albumultimotour";
-    public static final String ALBUM_UNVERANO = "/albumunveranosinti";
     public static final String ALBUM_COSANUESTRA = "/albumcosanuestra";
 
     public static final String IMAGENES = "/imagenes";
@@ -99,18 +88,17 @@ public final class Rutas {
     public static boolean esRutaProducto(String ruta) {
 
         return RAZER.equals(ruta)
+            || EMILIA.equals(ruta)
+            || NICO_ROBIN.equals(ruta)
             || MIKU.equals(ruta)
             || GAREN.equals(ruta)
             || LOGITECH_PRO.equals(ruta)
             || LOGITECH_COMBO.equals(ruta)
-            || TECLADO.equals(ruta)
                 //coleccionables
                 || NERO.equals(ruta)
                 || ASTA.equals(ruta)
-                || YUNO.equals(ruta)
-                || CUADRO.equals(ruta)
-                || ZANKA.equals(ruta)
-                || RIYO.equals(ruta)
+                    || CUADRO.equals(ruta)
+                    || RIYO.equals(ruta)
                 || HITSUKI.equals(ruta)
                 || RUDO.equals(ruta)
                 || ASUNA.equals(ruta)
@@ -121,24 +109,14 @@ public final class Rutas {
                 || REDMOUSE.equals(ruta)
                 || XBOX.equals(ruta)
                 || PS5.equals(ruta)
-                //albumes
-                || ALBUM_BDTF.equals(ruta)
-                || ALBUM_YE.equals(ruta)
-                || ALBUM_SWEETACTION.equals(ruta)
-                || ALBUM_UTOPIA.equals(ruta)
-                || ALBUM_HEROES.equals(ruta)
-                || ALBUM_OCTANE.equals(ruta)
-                || ALBUM_DATA.equals(ruta)
-                || ALBUM_ULTIMOTOUR.equals(ruta)
-                || ALBUM_UNVERANO.equals(ruta)
-                ||ALBUM_COSANUESTRA.equals(ruta)
                 ;
     }
 
     public static boolean esRutaAlbum(String ruta) {
 
         return ALBUM_NOTHING.equals(ruta)
-            || ALBUM_VOZ.equals(ruta);
+            || ALBUM_VOZ.equals(ruta)
+            || ALBUM_COSANUESTRA.equals(ruta);
     }
 
     public static boolean esImagen(String ruta) {
