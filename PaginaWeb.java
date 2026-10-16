@@ -13,14 +13,20 @@ public class PaginaWeb {
         new Miembro(
             "Enfermeria una noche del viernes 9 de Octubre",
             "Engelbert.png",
-            "Easter-egg black ops 7",
+            "Dia 15 del Gym",
             "Se sabe mejor los Easter eggs de Black Ops 7 que el mismo codigo del programa"
         ),
         new Miembro(
             "No me subo a motos",
             "Jose_Dictador.jpeg",
-            "Unico que no se sube a motos",
+            "Cuidado con la ventana del carro",
             "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro, nos cago el codigo tambien xd"
+        ),
+        new Miembro(
+            "La gran muralla china",
+            "Hector.png",
+            "Apoyando a miHoyo",
+            "Chicos, vieron que va a salir Digital Circus en Fornite?"
         )
     );
 
@@ -45,13 +51,45 @@ public class PaginaWeb {
             Rutas.EMILIA,
             "Emilia",
             "Consultar precio",
-            "Emilia.png",
+            "Emilia_rezero.png",
             "Figura de accion de Emilia",
             "COLECCIÓN",
             "coleccion"
         ),
 
         
+
+        
+        new Producto(
+            Rutas.TECLADO_K_DA,
+            "Teclado K/DA",
+            "Consultar precio",
+            "Teclado_K_DA.png",
+            "Teclado gamer con iluminación RGB y diseño K/DA.",
+            "GAMING",
+            "gaming"
+        ),
+
+        new Producto(
+            Rutas.MOUSE_GAMER,
+            "Mouse gamer K/DA",
+            "Consultar precio",
+            "Mouse_gamer.png",
+            "Mouse gamer con botones adicionales y diseño K/DA.",
+            "GAMING",
+            "gaming"
+        ),
+
+        new Producto(
+            Rutas.MOUSEPAD,
+            "Mousepad K/DA",
+            "Consultar precio",
+            "Mousepad.png",
+            "Mousepad con ilustración de K/DA para tu setup.",
+            "ACCESORIOS",
+            "accesorios"
+        ),
+
         new Producto(
             Rutas.NICO_ROBIN,
             "Nico Robin",

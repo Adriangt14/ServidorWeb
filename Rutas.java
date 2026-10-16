@@ -18,6 +18,9 @@ public final class Rutas {
 
     public static final String RAZER = "/productorazer";
     public static final String EMILIA = "/productoemilia";
+    public static final String TECLADO_K_DA = "/teclado-k-da";
+    public static final String MOUSE_GAMER = "/mouse-gamer";
+    public static final String MOUSEPAD = "/mousepad";
     public static final String NICO_ROBIN = "/productonicorobin";
     public static final String MIKU = "/productomiku";
     public static final String GAREN = "/productogaren";
@@ -89,6 +92,9 @@ public final class Rutas {
 
         return RAZER.equals(ruta)
             || EMILIA.equals(ruta)
+            || TECLADO_K_DA.equals(ruta)
+            || MOUSE_GAMER.equals(ruta)
+            || MOUSEPAD.equals(ruta)
             || NICO_ROBIN.equals(ruta)
             || MIKU.equals(ruta)
             || GAREN.equals(ruta)
