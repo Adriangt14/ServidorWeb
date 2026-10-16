@@ -356,30 +356,36 @@ public class ManejadorCliente {
             return;
         }
 
-        Path carpetaBase = Paths.get("imagenes")
-            .toAbsolutePath()
-            .normalize();
-
-        if (!Files.isDirectory(carpetaBase)) {
+        // No dependemos exclusivamente del directorio desde el que se ejecutó
+        // Java. VS Code/IntelliJ pueden arrancar el proceso desde bin/, out/ o
+        // desde la raíz del proyecto. Buscamos la carpeta imagenes en ambos
+        // puntos y en sus directorios padre.
+        Path carpeta;
+        try {
+            carpeta = localizarCarpetaImagenes();
+        } catch (IOException e) {
+            System.err.println("[IMG] " + e.getMessage());
             enviarTexto(
                 socket,
                 "HTTP/1.1 404 Not Found",
-                paginaError("Imagen no encontrada.")
+                paginaError("No se encontró la carpeta de imágenes del servidor.")
             );
             return;
         }
 
-        Path carpeta = carpetaBase.toRealPath();
         Path candidato = carpeta.resolve(nombre).normalize();
 
         if (
             !candidato.startsWith(carpeta) ||
             !Files.isRegularFile(candidato)
         ) {
+            System.err.println(
+                "[IMG] No se encontró: " + nombre + " | carpeta buscada: " + carpeta
+            );
             enviarTexto(
                 socket,
                 "HTTP/1.1 404 Not Found",
-                paginaError("Imagen no encontrada.")
+                paginaError("Imagen no encontrada. Verifica el nombre y la carpeta imagenes.")
             );
             return;
         }
@@ -449,6 +455,58 @@ public class ManejadorCliente {
         salida.write(encabezados.getBytes(StandardCharsets.UTF_8));
         salida.write(imagen);
         salida.flush();
+    }
+
+    /**
+     * Localiza la carpeta real de imágenes usando el directorio de trabajo y
+     * la ubicación desde donde se cargó esta clase. Esto evita los 404 cuando
+     * IntelliJ o VS Code ejecutan los .class desde una carpeta de salida.
+     */
+    private static Path localizarCarpetaImagenes() throws IOException {
+        Path directorioTrabajo = Paths.get("").toAbsolutePath().normalize();
+        Path directorioClases = null;
+
+        try {
+            directorioClases = Paths.get(
+                ManejadorCliente.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI()
+            ).toAbsolutePath().normalize();
+        } catch (Exception e) {
+            System.err.println(
+                "[IMG] No se pudo resolver la ubicación de las clases; se usará el directorio actual."
+            );
+        }
+
+        Path[] puntosDePartida = { directorioTrabajo, directorioClases };
+
+        for (Path inicio : puntosDePartida) {
+            if (inicio == null) {
+                continue;
+            }
+
+            Path cursor = Files.isRegularFile(inicio) ? inicio.getParent() : inicio;
+
+            for (int nivel = 0; cursor != null && nivel < 10; nivel++, cursor = cursor.getParent()) {
+                Path[] candidatos = {
+                    cursor.resolve("imagenes").normalize(),
+                    cursor.resolve("src").resolve("imagenes").normalize(),
+                    cursor.resolve("src").resolve("main").resolve("resources")
+                        .resolve("imagenes").normalize()
+                };
+
+                for (Path candidato : candidatos) {
+                    if (Files.isDirectory(candidato)) {
+                        Path real = candidato.toRealPath();
+                        System.out.println("[IMG] Directorio de imágenes: " + real);
+                        return real;
+                    }
+                }
+            }
+        }
+
+        throw new IOException(
+            "No se encontró la carpeta 'imagenes'. Directorio actual: " + directorioTrabajo
+        );
     }
 
     private static String tipoContenidoImagen(String nombre) {
