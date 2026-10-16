@@ -22,9 +22,37 @@ public final class Rutas {
     public static final String LOGITECH_PRO = "/productologitechpro";
     public static final String LOGITECH_COMBO = "/productologitechcombo";
     public static final String TECLADO = "/productotecladomecanico";
+    //coleccionables jose
+    public static final String NERO = "/productonero";
+    public static final String ASTA = "/productoasta";
+    public static final String YUNO = "/productoyuno";
+    public static final String CUADRO = "/productocuadro";
+    public static final String ZANKA = "productozanka";
+    public static final String RIYO = "/productoriyo";
+    public static final String HITSUKI = "/productohitsuki";
+    public static final String RUDO = "/productorudo";
+    public static final String ASUNA = "/productoasuna";
+    public static final String ASUNA2 = "/productoasuna2";
+    //GAMING JOSE
+    public static final String REDTECLADO = "/productoredteclado";
+    public static final String REDMOUSE = "/productoredmouse";
+    public static final String REDAUDIFONOS = "/productoredaudifonos";
+    public static final String XBOX = "/productoxbox";
+    public static final String PS5  = "/productops5";
 
     public static final String ALBUM_NOTHING = "/albumnothingbutthebest";
     public static final String ALBUM_VOZ = "/albumlavozdeoro";
+    //albumes goooooooooood
+    public static final String ALBUM_BDTF = "/albumbdtf";
+    public static final String ALBUM_YE = "/albumye";
+    public static final String ALBUM_SWEETACTION = "/albumsweetaction";
+    public static final String ALBUM_UTOPIA = "/albumutopia";
+    public static final String ALBUM_HEROES = "/albumheoresandvillains";
+    public static final String ALBUM_OCTANE = "/albumoctane";
+    public static final String ALBUM_DATA = "/albumdata";
+    public static final String ALBUM_ULTIMOTOUR = "/albumultimotour";
+    public static final String ALBUM_UNVERANO = "/albumunveranosinti";
+    public static final String ALBUM_COSANUESTRA = "/albumcosanuestra";
 
     public static final String IMAGENES = "/imagenes";
     public static final String BLOQUEADO = "/bloqueado";
@@ -57,7 +85,7 @@ public final class Rutas {
         }
 
         // Bloquear las páginas internas para visitantes públicos.
-        if (
+         if (
             rutaLimpia.equals(SOLICITUDES) ||
             rutaLimpia.equals(HILOS) ||
             rutaLimpia.equals(CLIENTES)
@@ -75,7 +103,36 @@ public final class Rutas {
             || GAREN.equals(ruta)
             || LOGITECH_PRO.equals(ruta)
             || LOGITECH_COMBO.equals(ruta)
-            || TECLADO.equals(ruta);
+            || TECLADO.equals(ruta)
+                //coleccionables
+                || NERO.equals(ruta)
+                || ASTA.equals(ruta)
+                || YUNO.equals(ruta)
+                || CUADRO.equals(ruta)
+                || ZANKA.equals(ruta)
+                || RIYO.equals(ruta)
+                || HITSUKI.equals(ruta)
+                || RUDO.equals(ruta)
+                || ASUNA.equals(ruta)
+                || ASUNA2.equals(ruta)
+                //gaming
+                || REDTECLADO.equals(ruta)
+                || REDAUDIFONOS.equals(ruta)
+                || REDMOUSE.equals(ruta)
+                || XBOX.equals(ruta)
+                || PS5.equals(ruta)
+                //albumes
+                || ALBUM_BDTF.equals(ruta)
+                || ALBUM_YE.equals(ruta)
+                || ALBUM_SWEETACTION.equals(ruta)
+                || ALBUM_UTOPIA.equals(ruta)
+                || ALBUM_HEROES.equals(ruta)
+                || ALBUM_OCTANE.equals(ruta)
+                || ALBUM_DATA.equals(ruta)
+                || ALBUM_ULTIMOTOUR.equals(ruta)
+                || ALBUM_UNVERANO.equals(ruta)
+                ||ALBUM_COSANUESTRA.equals(ruta)
+                ;
     }
 
     public static boolean esRutaAlbum(String ruta) {

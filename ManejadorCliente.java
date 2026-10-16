@@ -28,7 +28,26 @@ public class ManejadorCliente {
         "Logitech_Basico_Teclado.png",
         "teclado.png",
         "Album_Nothingbutthebest.webp",
-        "Album_Lavozdeoro.jpg"
+        "Album_Lavozdeoro.jpg",
+
+            //coleccionables
+            "Nero_Figura.png",
+            "Asta_Figura.png",
+            "Yuno_Funko.png",
+            "Cuadro_Asta.png",
+            "Zanka_Figura.png",
+            "Riyo_Figura.png",
+            "Hitsuki_Poster.png",
+            "Rudo_Figura.png",
+            "Asuna_Figura.png",
+            "Asuna_Figura2.png",
+
+            //gaming
+            "Audifonos_Redragon.png",
+            "Control_Ps5.png",
+            "Control_Xbox.png",
+            "Mouse_Redragon.png",
+            "Teclado_Redragon.png"
     );
 
     public static void atender(Socket clienteSocket, String id) {

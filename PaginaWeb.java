@@ -63,7 +63,159 @@ public class PaginaWeb {
             "Teclado para programar, jugar y completar tu setup.",
             "GAMING",
             "gaming"
-        )
+        ),
+
+            //coleccionables nuevos
+            new Producto(
+                   Rutas.NERO,
+                    "Figura Nero",
+                    "Q150.00",
+                    "Nero_Figura.png",
+                    "Figura coleccionable Nero Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.ASTA,
+                    "Figura Accion Asta",
+                    "Q200.00",
+                    "Asta_Figura.png",
+                    "Figura coleccionable Asta Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.YUNO,
+                    "Yuno Funko Pop!",
+                    "Q115.00",
+                    "Yuno_Funko.png",
+                    "Figura funko de Yuno de Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.CUADRO,
+                    "Cuadro de Asta",
+                    "Q75.00",
+                    "Cuadro_Asta.png",
+                    "Cuadro decorativo de Asta de Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.ZANKA,
+                    "Figura Accion Zanka",
+                    "Q135.00",
+                    "Zanka_Figura.png",
+                    "Figura de Zanka de Gachiakuta",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.RIYO,
+                    "Figura de Riyo",
+                    "Q187.00",
+                    "Riyo_Figura.png",
+                    "Figura coleccionable de Riyo Gachiakuta",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.HITSUKI,
+                    "Poster Hitsuki",
+                    "Q50.00",
+                    "Hitsuki_Poster.png",
+                    "Poster de Hitsuki de Gachiakuta",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.RUDO,
+                    "Figura de accion de Rudo",
+                    "Q250.00",
+                    "Rudo_Figura.png",
+                    "Figura Gigante de Rudo",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.ASUNA,
+                    "Figura de Asuna SAO",
+                    "Q500.00",
+                    "Asuna_Figura.png",
+                    "Figura accion Asuna en SAO",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            new Producto(
+                    Rutas.ASUNA2,
+                    "Figura Asuna Maid",
+                    "Q1000.00",
+                    "Asuna_Figura2.png",
+                    "Fugura de Asuna en traje maid",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
+
+            //GAMING
+            new Producto(
+                    Rutas.REDTECLADO,
+                    "Teclado gaming redragon",
+                    "Q300.00",
+                    "Teclado_Redragon.png",
+                    "Teclado para juegos competitivos",
+                    "GAMING",
+                    "gaming"
+            ),
+
+            new Producto(
+                    Rutas.REDAUDIFONOS,
+                    "Audifonos gaming redragon",
+                    "Q250.00",
+                    "Audifonos_Redragon.png",
+                    "Audifonos de alto perfomance gaming",
+                    "GAMING",
+                    "gaming"
+            ),
+
+            new Producto(
+                    Rutas.REDMOUSE,
+                    "Mouse optico redragon",
+                    "Q175.00",
+                    "Mouse_Redragon.png",
+                    "Mause 1,000,000 dpi",
+                    "GAMING",
+                    "gaming"
+            ),
+
+            new Producto(
+                    Rutas.XBOX,
+                    "Control Xbox",
+                    "Q500.00",
+                    "Control_Xbox.png",
+                    "Control compatible con pc Xbox",
+                    "GAMING",
+                    "gaming"
+            ),
+
+            new Producto(
+                    Rutas.PS5,
+                    "Control PS5",
+                    "Q750.00",
+                    "Control_Ps5.png",
+                    "Control gaming PS5",
+                    "GAMING",
+                    "gaming"
+            )
     );
 
     private static final List<Album> ALBUMS = List.of(
@@ -80,7 +232,44 @@ public class PaginaWeb {
             "La Voz de Oro",
             "Album_Lavozdeoro.jpg",
             "Una colección sonora que forma parte de Nexus UMG."
-        )
+        ),
+
+            //album nuevos
+            new Album(
+                    Rutas.ALBUM_BDTF,
+                    "My Beutifull And Darkness Twisted Fantasy",
+                    "BDTF.png",
+                    "Exito de la discografia de Kanye West"
+            ),
+
+            new Album(
+                    Rutas.ALBUM_YE,
+                    "Ye",
+                    "Ye.png",
+                    "Album que toca lo profundo de la discografia de Ye"
+            ),
+
+            new Album(
+                    Rutas.ALBUM_SWEETACTION,
+                    "Sweet Action",
+                    "SweetAction.png",
+                    "Segundo EP del artista Jack Harlow"
+            ),
+
+            new Album(
+                    Rutas.ALBUM_UTOPIA,
+                    "Utopia",
+                    "Utopia.png",
+                    "Album revolucionario de Travieso Scott"
+            ),
+
+            new Album(
+                    Rutas.ALBUM_HEROES,
+                    "Heroes and Villains",
+                    "Heroes.png",
+                    "Album producido por MetroBooming"
+            )
+
     );
 
     public static String generar(String ruta, String hilo) {
