@@ -5,6 +5,43 @@ public class PaginaWeb {
 
     private static final List<Producto> PRODUCTOS = List.of(
 
+        
+
+     
+    
+        new Producto(
+            Rutas.RAZER,
+            "El que Carreo el Proyecto y su mujer de LOL",
+            "Consultar precio",
+            "Qiyana_FigueroaGOAT.png",
+            "Este toro carrea proyectos sin pastillas",
+            "THE GOAT",
+            "Miembros del equipo"
+        ),
+        
+
+           new Producto(
+            Rutas.RAZER,
+            "Enfermeria una noche del viernes 9 de Octubre",
+            "Consultar precio",
+            "Engelbert.png",
+            "Se sabe mejor los Easter eggs de Black Ops 7 que el mismo codigo del programa",
+            "Easter-egg black ops 7",
+            "Miembros del equipo"
+        ),
+
+         new Producto(
+            Rutas.RAZER,
+            "No me subo a motos",
+            "Consultar precio",
+            "Jose_Dictador.jpeg",
+            "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro",
+            "Unico que no se sube a motos",
+            "Miembros del equipo"
+        ),
+
+
+
         new Producto(
             Rutas.RAZER,
             "Audífonos Razer",
@@ -13,6 +50,28 @@ public class PaginaWeb {
             "Audífonos para tus partidas, música y sesiones largas.",
             "AUDIO",
             "accesorios"
+        ),
+
+        
+        new Producto(
+            Rutas.RAZER,
+            "Emilia",
+            "Consultar precio",
+            "Emilia.png",
+            "Figura de accion de Emilia",
+            "COLECCIÓN",
+            "coleccion"
+        ),
+
+        
+        new Producto(
+            Rutas.RAZER,
+            "Nico Robin",
+            "Consultar precio",
+            "Nico_Robin.png",
+            "Figura de accion de Nico Robin",
+            "COLECCIÓN",
+            "coleccion"
         ),
 
         new Producto(
