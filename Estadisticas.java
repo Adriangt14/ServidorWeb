@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -66,6 +67,20 @@ public class Estadisticas {
         }
 
         rechazadas.incrementAndGet();
+    }
+
+    // Actualiza la IP real identificada por el manejador.
+    public static void actualizarIp(String id, String ip) {
+
+        if (id == null || ip == null || ip.isBlank()) {
+            return;
+        }
+
+        Solicitud solicitud = solicitudes.get(id);
+
+        if (solicitud != null) {
+            solicitud.ip = ip;
+        }
     }
 
     public static void actualizarRuta(String id, String ruta) {
@@ -227,7 +242,7 @@ public class Estadisticas {
     private static class Solicitud {
 
         final String id;
-        final String ip;
+        volatile String ip;
         volatile String ruta = "pendiente";
 
         Solicitud(String id, String ip) {
