@@ -20,7 +20,7 @@ public class PaginaWeb {
             "No me subo a motos",
             "Jose_Dictador.jpeg",
             "Unico que no se sube a motos",
-            "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro"
+            "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro, nos cago el codigo tambien xd"
         )
     );
 
