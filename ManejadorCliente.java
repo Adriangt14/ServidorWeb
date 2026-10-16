@@ -29,6 +29,7 @@ public class ManejadorCliente {
         "teclado.png",
         "Album_Nothingbutthebest.webp",
         "Album_Lavozdeoro.jpg",
+        "CosaNuestra.png",
 
             //coleccionables
             "Nero_Figura.png",
@@ -44,7 +45,7 @@ public class ManejadorCliente {
 
             //gaming
             "Audifonos_Redragon.png",
-            "Control_Ps5.png",
+            "Control_PS5.png",
             "Control_Xbox.png",
             "Mouse_Redragon.png",
             "Teclado_Redragon.png"

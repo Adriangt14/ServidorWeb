@@ -211,7 +211,7 @@ public class PaginaWeb {
                     Rutas.PS5,
                     "Control PS5",
                     "Q750.00",
-                    "Control_Ps5.png",
+                    "Control_PS5.png",
                     "Control gaming PS5",
                     "GAMING",
                     "gaming"
@@ -234,41 +234,12 @@ public class PaginaWeb {
             "Una colección sonora que forma parte de Nexus UMG."
         ),
 
-            //album nuevos
-            new Album(
-                    Rutas.ALBUM_BDTF,
-                    "My Beutifull And Darkness Twisted Fantasy",
-                    "BDTF.png",
-                    "Exito de la discografia de Kanye West"
-            ),
-
-            new Album(
-                    Rutas.ALBUM_YE,
-                    "Ye",
-                    "Ye.png",
-                    "Album que toca lo profundo de la discografia de Ye"
-            ),
-
-            new Album(
-                    Rutas.ALBUM_SWEETACTION,
-                    "Sweet Action",
-                    "SweetAction.png",
-                    "Segundo EP del artista Jack Harlow"
-            ),
-
-            new Album(
-                    Rutas.ALBUM_UTOPIA,
-                    "Utopia",
-                    "Utopia.png",
-                    "Album revolucionario de Travieso Scott"
-            ),
-
-            new Album(
-                    Rutas.ALBUM_HEROES,
-                    "Heroes and Villains",
-                    "Heroes.png",
-                    "Album producido por MetroBooming"
-            )
+        new Album(
+            Rutas.ALBUM_COSANUESTRA,
+            "Cosa Nuestra",
+            "CosaNuestra.png",
+            "Una referencia musical incorporada al archivo sonoro de Nexus UMG."
+        )
 
     );
 
@@ -378,7 +349,7 @@ public class PaginaWeb {
                         <h2>Selección de la expedición</h2>
                         <p>Explora nuestro stock actual.</p>
                     </div>
-                    <span class="contador">06 PRODUCTOS</span>
+                    <span class="contador">%d PRODUCTOS</span>
                 </div>
 
                 <div class="productos">
@@ -408,7 +379,7 @@ public class PaginaWeb {
                     %s
                 </div>
             </section>
-            """.formatted(productos, albums);
+            """.formatted(PRODUCTOS.size(), productos, albums);
     }
 
     private static String paginaCategoria(String ruta) {
