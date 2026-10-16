@@ -4,7 +4,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.InetAddress;
-import java.net.Inet6Address;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.net.URI;
@@ -87,20 +86,16 @@ public class ManejadorCliente {
             ip = obtenerIpCliente(clienteSocket, cabeceras, ipConexion);
             Estadisticas.actualizarIp(id, ip);
 
-            LimitadorSolicitudes.Resultado decision =
-                LimitadorSolicitudes.comprobar(ip);
+            // Barrera global antes de validar método y ruta: limita también
+            // peticiones malformadas y métodos que el servidor no admite.
+            LimitadorSolicitudes.Resultado decisionGlobal =
+                LimitadorSolicitudes.comprobarGlobal(ip);
 
-            if (!decision.permitido()) {
+            if (!decisionGlobal.permitido()) {
                 Estadisticas.actualizarRuta(id, Rutas.BLOQUEADO);
-                enviarTexto(
+                enviarLimiteSolicitudes(
                     clienteSocket,
-                    "HTTP/1.1 429 Too Many Requests",
-                    paginaError(
-                        429,
-                        "Demasiadas solicitudes",
-                        "Se alcanzó el límite temporal de solicitudes. Espera un momento y vuelve a intentarlo."
-                    ),
-                    decision.retryAfterSegundos()
+                    decisionGlobal.retryAfterSegundos()
                 );
                 return;
             }
@@ -176,9 +171,22 @@ public class ManejadorCliente {
                 return;
             }
 
+            boolean esImagen = Rutas.esImagen(ruta);
+            LimitadorSolicitudes.Resultado decisionRecurso =
+                LimitadorSolicitudes.comprobar(ip, esImagen);
+
+            if (!decisionRecurso.permitido()) {
+                Estadisticas.actualizarRuta(id, Rutas.BLOQUEADO);
+                enviarLimiteSolicitudes(
+                    clienteSocket,
+                    decisionRecurso.retryAfterSegundos()
+                );
+                return;
+            }
+
             Estadisticas.actualizarRuta(id, ruta);
 
-            if (Rutas.esImagen(ruta)) {
+            if (esImagen) {
                 enviarImagen(ruta, clienteSocket);
                 return;
             }
@@ -331,6 +339,22 @@ public class ManejadorCliente {
 
         salida.write(cuerpo);
         salida.flush();
+    }
+
+    private static void enviarLimiteSolicitudes(
+        Socket socket,
+        long retryAfterSegundos
+    ) throws IOException {
+        enviarTexto(
+            socket,
+            "HTTP/1.1 429 Too Many Requests",
+            paginaError(
+                429,
+                "Demasiadas solicitudes",
+                "Se alcanzó el límite temporal de solicitudes. Espera un momento y vuelve a intentarlo."
+            ),
+            retryAfterSegundos
+        );
     }
 
     private static void enviarImagen(

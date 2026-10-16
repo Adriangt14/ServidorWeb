@@ -36,29 +36,44 @@ public final class LimitadorSolicitudes {
     ) {
     }
 
-    // Compatibilidad para llamadas existentes: limita solicitudes de páginas.
+    // Límites separados por recurso y límite global por IP.
+    private static final int MAX_SOLICITUDES_TOTALES_POR_VENTANA = 900;
+
+    // Límite general: se aplica antes de validar método y ruta para que las
+    // peticiones malformadas o no permitidas también consuman una cuota.
+    public static Resultado comprobarGlobal(String ip) {
+        return comprobarVentana(
+            ip,
+            "\u0000ALL",
+            MAX_SOLICITUDES_TOTALES_POR_VENTANA
+        );
+    }
+
+    // Compatibilidad: si se llama con una sola IP, se trata como una página.
     public static Resultado comprobar(String ip) {
         return comprobar(ip, false);
     }
 
-    /**
-     * Comprueba el límite de navegación o el límite de recursos estáticos.
-     * Las imágenes tienen un cupo separado para que una carga normal del
-     * catálogo no agote el límite de las páginas.
-     */
-    public static synchronized Resultado comprobar(
+    /** Aplica una cuota específica a páginas o imágenes. */
+    public static Resultado comprobar(String ip, boolean recursoImagen) {
+        String tipo = recursoImagen ? "\u0000IMG" : "\u0000WEB";
+        int limite = recursoImagen
+            ? MAX_IMAGENES_POR_VENTANA
+            : MAX_PAGINAS_POR_VENTANA;
+
+        return comprobarVentana(ip, tipo, limite);
+    }
+
+    private static synchronized Resultado comprobarVentana(
         String ip,
-        boolean recursoImagen
+        String tipo,
+        int limiteSolicitudes
     ) {
         String direccion = (ip == null || ip.isBlank())
             ? "desconocida"
             : ip.trim();
 
-        String clave = direccion + (recursoImagen ? "\u0000IMG" : "\u0000WEB");
-        int limiteSolicitudes = recursoImagen
-            ? MAX_IMAGENES_POR_VENTANA
-            : MAX_PAGINAS_POR_VENTANA;
-
+        String clave = direccion + tipo;
         long ahora = System.nanoTime();
         comprobaciones++;
 
