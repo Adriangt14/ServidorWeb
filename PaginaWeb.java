@@ -6,10 +6,30 @@ import java.util.stream.Collectors;
 public class PaginaWeb {
 
     private static final List<Miembro> MIEMBROS = List.of(
-        new Miembro("El que Carreo el Proyecto y su mujer de LOL", "Qiyana_FigueroaGOAT.png"),
-        new Miembro("Enfermeria una noche del viernes 9 de Octubre", "Engelbert.png"),
-        new Miembro("No me subo a motos", "Jose_Dictador.png"),
-        new Miembro("La gran muralla china", "Hector.png")
+        new Miembro(
+            "El que Carreo el Proyecto y su mujer de LOL",
+            "Qiyana_FigueroaGOAT.png",
+            "THE GOAT",
+            "Este toro carrea proyectos sin pastillas"
+        ),
+        new Miembro(
+            "Enfermeria una noche del viernes 9 de Octubre",
+            "Engelbert.png",
+            "Dia 15 del Gym",
+            "Se sabe mejor los Easter eggs de Black Ops 7 que el mismo codigo del programa"
+        ),
+        new Miembro(
+            "No me subo a motos",
+            "Jose_Dictador.png",
+            "Cuidado con la ventana del carro",
+            "Lo dejamos sin supervision y tuvo 87 errores en el proyecto. Devoro, nos cago el codigo tambien xd"
+        ),
+        new Miembro(
+            "La gran muralla china",
+            "Hector.png",
+            "Apoyando a miHoyo",
+            "Chicos, vieron que va a salir Digital Circus en Fornite?"
+        )
     );
 
     private static final List<Producto> PRODUCTOS = List.of(
@@ -114,135 +134,135 @@ public class PaginaWeb {
             "accesorios"
         ),
 
-        new Producto(
-            Rutas.NERO,
-            "Figura Nero",
-            "Q150.00",
-            "Nero_Figura.png",
-            "Figura coleccionable Nero Black Clover",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                   Rutas.NERO,
+                    "Figura Nero",
+                    "Q150.00",
+                    "Nero_Figura.png",
+                    "Figura coleccionable Nero Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.ASTA,
-            "Figura Accion Asta",
-            "Q200.00",
-            "Asta_Figura.png",
-            "Figura coleccionable Asta Black Clover",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.ASTA,
+                    "Figura Accion Asta",
+                    "Q200.00",
+                    "Asta_Figura.png",
+                    "Figura coleccionable Asta Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.CUADRO,
-            "Cuadro de Asta",
-            "Q75.00",
-            "Cuadro_Asta.png",
-            "Cuadro decorativo de Asta de Black Clover",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.CUADRO,
+                    "Cuadro de Asta",
+                    "Q75.00",
+                    "Cuadro_Asta.png",
+                    "Cuadro decorativo de Asta de Black Clover",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.RIYO,
-            "Figura de Riyo",
-            "Q187.00",
-            "Riyo_Figura.png",
-            "Figura coleccionable de Riyo Gachiakuta",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.RIYO,
+                    "Figura de Riyo",
+                    "Q187.00",
+                    "Riyo_Figura.png",
+                    "Figura coleccionable de Riyo Gachiakuta",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.HITSUKI,
-            "Poster Hitsuki",
-            "Q50.00",
-            "Hitsuki_Poster.png",
-            "Poster de Hitsuki de Gachiakuta",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.HITSUKI,
+                    "Poster Hitsuki",
+                    "Q50.00",
+                    "Hitsuki_Poster.png",
+                    "Poster de Hitsuki de Gachiakuta",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.RUDO,
-            "Figura de accion de Rudo",
-            "Q250.00",
-            "Rudo_Figura.png",
-            "Figura Gigante de Rudo",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.RUDO,
+                    "Figura de accion de Rudo",
+                    "Q250.00",
+                    "Rudo_Figura.png",
+                    "Figura Gigante de Rudo",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.ASUNA,
-            "Figura de Asuna SAO",
-            "Q500.00",
-            "Asuna_Figura.png",
-            "Figura accion Asuna en SAO",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.ASUNA,
+                    "Figura de Asuna SAO",
+                    "Q500.00",
+                    "Asuna_Figura.png",
+                    "Figura accion Asuna en SAO",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.ASUNA2,
-            "Figura Asuna Maid",
-            "Q1000.00",
-            "Asuna_Figura2.png",
-            "Fugura de Asuna en traje maid",
-            "COLECCIÓN",
-            "coleccion"
-        ),
+            new Producto(
+                    Rutas.ASUNA2,
+                    "Figura Asuna Maid",
+                    "Q1000.00",
+                    "Asuna_Figura2.png",
+                    "Fugura de Asuna en traje maid",
+                    "COLECCIÓN",
+                    "coleccion"
+            ),
 
-        new Producto(
-            Rutas.REDTECLADO,
-            "Teclado gaming redragon",
-            "Q300.00",
-            "Teclado_Redragon.png",
-            "Teclado para juegos competitivos",
-            "GAMING",
-            "gaming"
-        ),
+            new Producto(
+                    Rutas.REDTECLADO,
+                    "Teclado gaming redragon",
+                    "Q300.00",
+                    "Teclado_Redragon.png",
+                    "Teclado para juegos competitivos",
+                    "GAMING",
+                    "gaming"
+            ),
 
-        new Producto(
-            Rutas.REDAUDIFONOS,
-            "Audifonos gaming redragon",
-            "Q250.00",
-            "Audifonos_Redragon.png",
-            "Audifonos de alto perfomance gaming",
-            "GAMING",
-            "gaming"
-        ),
+            new Producto(
+                    Rutas.REDAUDIFONOS,
+                    "Audifonos gaming redragon",
+                    "Q250.00",
+                    "Audifonos_Redragon.png",
+                    "Audifonos de alto perfomance gaming",
+                    "GAMING",
+                    "gaming"
+            ),
 
-        new Producto(
-            Rutas.REDMOUSE,
-            "Mouse optico redragon",
-            "Q175.00",
-            "Mouse_Redragon.png",
-            "Mause 1,000,000 dpi",
-            "GAMING",
-            "gaming"
-        ),
+            new Producto(
+                    Rutas.REDMOUSE,
+                    "Mouse optico redragon",
+                    "Q175.00",
+                    "Mouse_Redragon.png",
+                    "Mause 1,000,000 dpi",
+                    "GAMING",
+                    "gaming"
+            ),
 
-        new Producto(
-            Rutas.XBOX,
-            "Control Xbox",
-            "Q500.00",
-            "Control_Xbox.png",
-            "Control compatible con pc Xbox",
-            "GAMING",
-            "gaming"
-        ),
+            new Producto(
+                    Rutas.XBOX,
+                    "Control Xbox",
+                    "Q500.00",
+                    "Control_Xbox.png",
+                    "Control compatible con pc Xbox",
+                    "GAMING",
+                    "gaming"
+            ),
 
-        new Producto(
-            Rutas.PS5,
-            "Control PS5",
-            "Q750.00",
-            "Control_PS5.png",
-            "Control gaming PS5",
-            "GAMING",
-            "gaming"
-        )
+            new Producto(
+                    Rutas.PS5,
+                    "Control PS5",
+                    "Q750.00",
+                    "Control_PS5.png",
+                    "Control gaming PS5",
+                    "GAMING",
+                    "gaming"
+            )
     );
 
     private static final List<Album> ALBUMS = List.of(
@@ -267,6 +287,7 @@ public class PaginaWeb {
             "CosaNuestra.png",
             "Una referencia musical incorporada al archivo sonoro de Nexus UMG."
         )
+
     );
 
     private static final ConcurrentHashMap<String, String> CACHE_PAGINAS =
@@ -278,7 +299,6 @@ public class PaginaWeb {
         if (ruta == null || esRutaDinamica(ruta) || !Rutas.esPaginaValida(ruta)) {
             return generarSinCache(ruta, hilo);
         }
-
         return CACHE_PAGINAS.computeIfAbsent(
             ruta,
             clave -> generarSinCache(clave, hilo)
@@ -289,7 +309,6 @@ public class PaginaWeb {
         if (ruta == null || esRutaDinamica(ruta) || !Rutas.esPaginaValida(ruta)) {
             return generarSinCache(ruta, hilo).getBytes(StandardCharsets.UTF_8);
         }
-
         return CACHE_PAGINAS_BYTES.computeIfAbsent(
             ruta,
             clave -> generar(clave, hilo).getBytes(StandardCharsets.UTF_8)
@@ -304,10 +323,12 @@ public class PaginaWeb {
         String contenido;
 
         if (ruta.equals(Rutas.EQUIPO)) {
+
             contenido = paginaEquipo();
 
         } else if (ruta.equals(Rutas.INICIO) ||
             ruta.equals(Rutas.PRODUCTOS)) {
+
             contenido = inicio();
 
         } else if (
@@ -315,42 +336,50 @@ public class PaginaWeb {
             ruta.equals(Rutas.GAMING) ||
             ruta.equals(Rutas.ACCESORIOS)
         ) {
+
             contenido = paginaCategoria(ruta);
 
         } else if (ruta.equals(Rutas.MUSICA)) {
+
             contenido = paginaMusica();
 
         } else if (ruta.equals(Rutas.SERVICIOS)) {
+
             contenido = paginaInformativa(
                 "Servicios",
                 "Una experiencia de atención cercana para acompañar tu próxima expedición."
             );
 
         } else if (ruta.equals(Rutas.NOSOTROS)) {
+
             contenido = paginaInformativa(
                 "Sobre Nexus UMG",
                 "Tecnología, gaming y cultura reunidos en un solo lugar."
             );
 
         } else if (ruta.equals(Rutas.SOLICITUDES)) {
+
             contenido = paginaInformativa(
                 "Solicitudes HTTP",
                 "Solicitud atendida por el hilo: " + hilo
             );
 
         } else if (ruta.equals(Rutas.HILOS)) {
+
             contenido = paginaInformativa(
                 "Hilos del servidor",
                 "Solicitud atendida por el hilo: " + hilo
             );
 
         } else if (ruta.equals(Rutas.CLIENTES)) {
+
             contenido = paginaInformativa(
                 "Clientes",
                 "El servidor está preparado para recibir clientes."
             );
 
         } else {
+
             Producto producto = buscarProducto(ruta);
             Album album = buscarAlbum(ruta);
 
@@ -432,11 +461,14 @@ public class PaginaWeb {
     }
 
     private static String paginaCategoria(String ruta) {
+
         List<Producto> encontrados;
+
         String titulo;
         String descripcion;
 
         if (ruta.equals(Rutas.GAMING)) {
+
             titulo = "Gaming";
             descripcion = "Equipo para jugar y completar tu setup.";
 
@@ -445,6 +477,7 @@ public class PaginaWeb {
                 .collect(Collectors.toList());
 
         } else if (ruta.equals(Rutas.ACCESORIOS)) {
+
             titulo = "Accesorios";
             descripcion = "Accesorios para trabajar y disfrutar cada día.";
 
@@ -453,8 +486,10 @@ public class PaginaWeb {
                 .collect(Collectors.toList());
 
         } else {
+
             titulo = "Tecnología";
             descripcion = "Explora el catálogo completo de Nexus UMG.";
+
             encontrados = PRODUCTOS;
         }
 
@@ -473,6 +508,7 @@ public class PaginaWeb {
     }
 
     private static String paginaMusica() {
+
         String tarjetas = ALBUMS.stream()
             .map(PaginaWeb::tarjetaAlbum)
             .collect(Collectors.joining("\n"));
@@ -508,14 +544,27 @@ public class PaginaWeb {
                 <div class="miembro-imagen">
                     <img src="/imagenes/%s" alt="%s" loading="lazy">
                 </div>
+
                 <div class="miembro-info">
+                    <div class="miembro-meta">
+                        <span class="etiqueta-miembro">%s</span>
+                        <strong class="miembro-proyecto">Proyecto UMG</strong>
+                    </div>
                     <h3>%s</h3>
+                    <p class="miembro-descripcion">%s</p>
                 </div>
             </article>
-            """.formatted(miembro.imagen, miembro.nombre, miembro.nombre);
+            """.formatted(
+                miembro.imagen,
+                miembro.nombre,
+                miembro.etiqueta,
+                miembro.nombre,
+                miembro.descripcion
+            );
     }
 
     private static String tarjetaProducto(Producto producto) {
+
         return """
             <article class="producto">
                 <a class="producto-imagen" href="%s">
@@ -549,6 +598,7 @@ public class PaginaWeb {
     }
 
     private static String tarjetaAlbum(Album album) {
+
         return """
             <article class="album">
                 <a class="album-imagen" href="%s">
@@ -573,6 +623,7 @@ public class PaginaWeb {
     }
 
     private static String detalleProducto(Producto producto) {
+
         return """
             <section class="detalle">
                 <a class="enlace" href="/productos">← Volver al catálogo</a>
@@ -602,6 +653,7 @@ public class PaginaWeb {
     }
 
     private static String detalleAlbum(Album album) {
+
         return """
             <section class="detalle">
                 <a class="enlace" href="/musica">← Volver al archivo sonoro</a>
@@ -631,6 +683,7 @@ public class PaginaWeb {
         String titulo,
         String descripcion
     ) {
+
         return """
             <section class="seccion informativa">
                 <p class="etiqueta">NEXUS UMG</p>
@@ -642,6 +695,7 @@ public class PaginaWeb {
     }
 
     private static Producto buscarProducto(String ruta) {
+
         return PRODUCTOS.stream()
             .filter(p -> p.ruta.equals(ruta))
             .findFirst()
@@ -649,6 +703,7 @@ public class PaginaWeb {
     }
 
     private static Album buscarAlbum(String ruta) {
+
         return ALBUMS.stream()
             .filter(a -> a.ruta.equals(ruta))
             .findFirst()
@@ -656,6 +711,7 @@ public class PaginaWeb {
     }
 
     private static String plantilla(String contenido) {
+
         String html = """
             <!DOCTYPE html>
             <html lang="es">
@@ -879,10 +935,46 @@ public class PaginaWeb {
                         padding: 14px;
                     }
 
+                    .miembro-meta {
+                        display: flex;
+                        align-items: flex-start;
+                        justify-content: space-between;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        margin-bottom: 11px;
+                    }
+
+                    .etiqueta-miembro {
+                        display: inline-block;
+                        max-width: 100%;
+                        padding: 5px 7px;
+                        background: #151d23;
+                        color: var(--marfil);
+                        font-size: 8px;
+                        font-weight: 600;
+                        letter-spacing: 1px;
+                        line-height: 1.4;
+                        text-transform: uppercase;
+                    }
+
+                    .miembro-proyecto {
+                        color: #202328;
+                        font-size: 10px;
+                        white-space: nowrap;
+                    }
+
                     .miembro h3 {
                         margin: 0;
                         font-size: 14px;
                         line-height: 1.35;
+                    }
+
+                    .miembro-descripcion {
+                        margin: 12px 0 0;
+                        padding-top: 10px;
+                        border-top: 1px solid #d0c0a8;
+                        color: #64615d;
+                        font-size: 12px;
                     }
 
                     .producto {
@@ -1256,7 +1348,9 @@ public class PaginaWeb {
 
     private record Miembro(
         String nombre,
-        String imagen
+        String imagen,
+        String etiqueta,
+        String descripcion
     ) {
     }
 
