@@ -110,8 +110,7 @@ public final class LimitadorSolicitudes {
             MAX_PAGINAS_POR_VENTANA, VENTANA_NANOS);
         private final LimitadorAtomico imagenes = new LimitadorAtomico(
             MAX_IMAGENES_POR_VENTANA, VENTANA_NANOS);
-        // El bit menos significativo indica que la entrada ya fue expirada.
-        // Así se sincroniza el refresco de actividad y la limpieza sin usar monitores.
+
         private final AtomicLong estadoActividad;
 
         private LimitesCliente(long ahora) {
@@ -156,7 +155,6 @@ public final class LimitadorSolicitudes {
         }
     }
 
-    /* GCRA con CAS: evita bloquear un monitor compartido por todas las peticiones de una IP. */
     private static final class LimitadorAtomico {
         private final long intervaloTokenNanos;
         private final long toleranciaRafagaNanos;

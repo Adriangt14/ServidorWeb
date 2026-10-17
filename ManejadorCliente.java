@@ -47,7 +47,6 @@ public class ManejadorCliente {
     private static final AtomicLong ERRORES_IO = new AtomicLong();
     private static volatile Path carpetaImagenesCache;
 
-
     public static void atender(Socket clienteSocket, String id) {
 
         String hilo = Thread.currentThread().getName();
@@ -58,7 +57,6 @@ public class ManejadorCliente {
         Estadisticas.iniciarSolicitud(id);
 
         try {
-
             clienteSocket.setSoTimeout(TIMEOUT_LECTURA_MS);
 
             BufferedReader entrada = new BufferedReader(
@@ -68,8 +66,6 @@ public class ManejadorCliente {
                 )
             );
 
-            // Un solo plazo total evita que un cliente extienda indefinidamente
-            // la lectura enviando una cabecera cada varios segundos.
             long plazoLectura = System.nanoTime()
                 + TimeUnit.MILLISECONDS.toNanos(TIMEOUT_LECTURA_MS);
 
@@ -99,14 +95,9 @@ public class ManejadorCliente {
                 return;
             }
 
-            // Solo se acepta CF-Connecting-IP cuando la conexión viene de
-            // loopback, porque el servidor está ligado a la interfaz local y
-            // recibe tráfico público únicamente mediante Cloudflare Tunnel.
             ip = obtenerIpCliente(clienteSocket, cabeceras, ipConexion);
             Estadisticas.actualizarIp(id, ip);
 
-            // Barrera global antes de validar método y ruta: limita también
-            // peticiones malformadas y métodos que el servidor no admite.
             LimitadorSolicitudes.Resultado decisionGlobal =
                 LimitadorSolicitudes.comprobarGlobal(ip);
 
@@ -125,31 +116,25 @@ public class ManejadorCliente {
                 partes.length != 3 ||
                 !(partes[2].equals("HTTP/1.0") || partes[2].equals("HTTP/1.1"))
             ) {
-
                 enviarTexto(
                     clienteSocket,
                     "HTTP/1.1 400 Bad Request",
                     paginaError(400, "Solicitud HTTP no válida", "La petición recibida no tiene el formato esperado.")
                 );
-
                 return;
             }
 
             if (!partes[0].equals("GET")) {
-
                 enviarTexto(
                     clienteSocket,
                     "HTTP/1.1 405 Method Not Allowed",
                     paginaError(405, "Método no permitido", "Este servidor solo admite solicitudes GET.")
                 );
-
                 return;
             }
 
             try {
-
                 URI uri = new URI(partes[1]);
-
                 ruta = uri.getPath();
 
                 if (ruta == null || !ruta.startsWith("/")) {
@@ -157,7 +142,6 @@ public class ManejadorCliente {
                 }
 
             } catch (URISyntaxException e) {
-
                 ruta = "";
 
                 Estadisticas.actualizarRuta(
@@ -170,12 +154,10 @@ public class ManejadorCliente {
                     "HTTP/1.1 400 Bad Request",
                     paginaError(400, "Ruta no válida", "La ruta solicitada no tiene un formato válido.")
                 );
-
                 return;
             }
 
             if (Rutas.esRutaProtegida(ruta)) {
-
                 Estadisticas.actualizarRuta(
                     id,
                     Rutas.BLOQUEADO
@@ -186,7 +168,6 @@ public class ManejadorCliente {
                     "HTTP/1.1 404 Not Found",
                     paginaError("Recurso no encontrado.")
                 );
-
                 return;
             }
 
@@ -211,13 +192,11 @@ public class ManejadorCliente {
             }
 
             if (!Rutas.esPaginaValida(ruta)) {
-
                 enviarTexto(
                     clienteSocket,
                     "HTTP/1.1 404 Not Found",
                     paginaError("La página solicitada no existe.")
                 );
-
                 return;
             }
 
@@ -247,7 +226,6 @@ public class ManejadorCliente {
             }
 
         } finally {
-
             Estadisticas.finalizarSolicitud(
                 id,
                 ip,
@@ -271,7 +249,6 @@ public class ManejadorCliente {
         StringBuilder linea = new StringBuilder();
 
         while (true) {
-
             long restante = limite - System.nanoTime();
 
             if (restante <= 0) {
@@ -296,7 +273,6 @@ public class ManejadorCliente {
             }
 
             if (caracter == -1) {
-
                 if (linea.isEmpty()) {
                     return null;
                 }
@@ -403,8 +379,6 @@ public class ManejadorCliente {
             (Rutas.IMAGENES + "/").length()
         );
 
-        // Solo se sirven archivos directamente dentro de /imagenes.
-        // Se rechazan subdirectorios y nombres de ruta sospechosos.
         if (
             nombre.isBlank() ||
             nombre.contains("/") ||
@@ -439,7 +413,6 @@ public class ManejadorCliente {
             !candidato.startsWith(carpeta) ||
             !Files.isRegularFile(candidato)
         ) {
-            // Fallback opcional para diferencias de mayúsculas/minúsculas en nombres.
             Path alternativo = buscarNombreSinDistinguirMayusculas(carpeta, nombre);
             if (alternativo != null) {
                 candidato = alternativo;
@@ -456,7 +429,6 @@ public class ManejadorCliente {
 
         Path archivo = candidato.toRealPath();
 
-        // Impide servir enlaces simbólicos que salgan de la carpeta de imágenes.
         if (!archivo.startsWith(carpeta) || !Files.isRegularFile(archivo)) {
             enviarTexto(
                 socket,
@@ -521,7 +493,6 @@ public class ManejadorCliente {
         if (imagen != null) {
             salida.write(imagen);
         } else {
-            // Copia por bloques para no crear un byte[] del tamaño del archivo en cada petición.
             Files.copy(archivo, salida);
         }
         salida.flush();
@@ -540,8 +511,6 @@ public class ManejadorCliente {
             return null;
         }
 
-        // Solo se bloquea durante la carga inicial de un recurso; las lecturas
-        // posteriores consultan el mapa concurrente sin esperar este monitor.
         synchronized (BLOQUEO_CACHE_IMAGENES) {
             existente = CACHE_IMAGENES.get(archivo);
             if (existente != null) {
@@ -565,11 +534,6 @@ public class ManejadorCliente {
         }
     }
 
-    /**
-     * Busca la carpeta de imágenes sin depender exclusivamente del directorio
-     * desde el que se ejecutó java. También funciona si las clases están en
-     * una carpeta de compilación como bin/ o build/classes/.
-     */
     private static Path localizarCarpetaImagenes() throws IOException {
         Path cache = carpetaImagenesCache;
         if (cache != null && Files.isDirectory(cache)) {
@@ -637,7 +601,6 @@ public class ManejadorCliente {
                 .limit(2)
                 .toList();
 
-            // No elige arbitrariamente si dos nombres solo difieren en el caso.
             if (coincidencias.size() == 1) {
                 System.err.println("[IMG] Nombre corregido por mayúsculas/minúsculas: " +
                     nombre + " -> " + coincidencias.get(0).getFileName());
@@ -648,7 +611,6 @@ public class ManejadorCliente {
     }
 
     private static String tipoContenidoImagen(String nombre) {
-
         int punto = nombre.lastIndexOf('.');
         if (punto < 0 || punto == nombre.length() - 1) {
             return null;
@@ -745,8 +707,6 @@ public class ManejadorCliente {
                 throw new CabecerasInvalidasException("Cabecera CF-Connecting-IP duplicada.");
             }
 
-            // Para cabeceras repetidas que no afectan a la seguridad, conservamos
-            // el primer valor; CF-Connecting-IP nunca admite duplicados.
             cabeceras.putIfAbsent(nombre, valor);
         }
     }
@@ -765,7 +725,6 @@ public class ManejadorCliente {
         return ipNormalizada != null ? ipNormalizada : ipConexion;
     }
 
-    /** Valida direcciones IP numéricas sin permitir nombres de host ni DNS. */
     private static String normalizarIp(String candidata) {
         if (candidata == null || candidata.isBlank() || candidata.length() > 45) {
             return null;
@@ -792,8 +751,6 @@ public class ManejadorCliente {
             return canonica.toString();
         }
 
-        // Se permiten únicamente caracteres de una dirección IPv6 literal.
-        // El ':' impide que InetAddress intente resolver un nombre DNS.
         if (ip.indexOf(':') >= 0 && PATRON_IPV6.matcher(ip).matches()) {
             try {
                 InetAddress direccion = InetAddress.getByName(ip);

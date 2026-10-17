@@ -17,7 +17,6 @@ public class Estadisticas {
     private static final AtomicLong consecutivo = new AtomicLong();
     private static final AtomicInteger enCola = new AtomicInteger();
 
-    // Mantiene el orden de llegada y permite retirar solicitudes en O(log n).
     private static final ConcurrentSkipListMap<Long, Solicitud> cola =
         new ConcurrentSkipListMap<>();
 

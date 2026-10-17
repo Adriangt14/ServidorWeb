@@ -1,4 +1,3 @@
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -45,14 +44,12 @@ public class Servidor {
                     InetAddress.getByName("127.0.0.1")
                 )
         ) {
-
             while (true) {
                 Socket clienteSocket = serverSocket.accept();
                 gestorHilos.ejecutar(clienteSocket);
             }
 
         } catch (IOException e) {
-
             System.err.println(
                 "Error en el servidor: " + e.getMessage()
             );

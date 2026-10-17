@@ -1,14 +1,14 @@
-
 import java.util.Locale;
 
 public final class Rutas {
-    //CORRECCIONES CODIGO DE JOSE RIOS
+
     public static final String INICIO = "/";
     public static final String PRODUCTOS = "/productos";
     public static final String TECNOLOGIA = "/tecnologia";
     public static final String GAMING = "/gaming";
     public static final String ACCESORIOS = "/accesorios";
     public static final String MUSICA = "/musica";
+    public static final String EQUIPO = "/equipo";
     public static final String SERVICIOS = "/servicios";
     public static final String NOSOTROS = "/nosotros";
 
@@ -26,7 +26,7 @@ public final class Rutas {
     public static final String GAREN = "/productogaren";
     public static final String LOGITECH_PRO = "/productologitechpro";
     public static final String LOGITECH_COMBO = "/productologitechcombo";
-    //CORRECCIONES CODIGO DE JOSE RIOS
+
     public static final String NERO = "/productonero";
     public static final String ASTA = "/productoasta";
     public static final String CUADRO = "/productocuadro";
@@ -35,12 +35,12 @@ public final class Rutas {
     public static final String RUDO = "/productorudo";
     public static final String ASUNA = "/productoasuna";
     public static final String ASUNA2 = "/productoasuna2";
-    //GAMING JOSE
+
     public static final String REDTECLADO = "/productoredteclado";
     public static final String REDMOUSE = "/productoredmouse";
     public static final String REDAUDIFONOS = "/productoredaudifonos";
     public static final String XBOX = "/productoxbox";
-    public static final String PS5  = "/productops5";
+    public static final String PS5 = "/productops5";
 
     public static final String ALBUM_NOTHING = "/albumnothingbutthebest";
     public static final String ALBUM_VOZ = "/albumlavozdeoro";
@@ -54,7 +54,6 @@ public final class Rutas {
     }
 
     public static boolean esRutaProtegida(String ruta) {
-
         if (ruta == null || !ruta.startsWith("/")) {
             return true;
         }
@@ -70,14 +69,12 @@ public final class Rutas {
         }
 
         for (String segmento : rutaLimpia.split("/")) {
-
             if (segmento.startsWith(".")) {
                 return true;
             }
         }
 
-        // Bloquear las páginas internas para visitantes públicos.
-         if (
+        if (
             rutaLimpia.equals(SOLICITUDES) ||
             rutaLimpia.equals(HILOS) ||
             rutaLimpia.equals(CLIENTES)
@@ -89,7 +86,6 @@ public final class Rutas {
     }
 
     public static boolean esRutaProducto(String ruta) {
-
         return RAZER.equals(ruta)
             || EMILIA.equals(ruta)
             || TECLADO_K_DA.equals(ruta)
@@ -100,44 +96,39 @@ public final class Rutas {
             || GAREN.equals(ruta)
             || LOGITECH_PRO.equals(ruta)
             || LOGITECH_COMBO.equals(ruta)
-                //coleccionables
-                || NERO.equals(ruta)
-                || ASTA.equals(ruta)
-                    || CUADRO.equals(ruta)
-                    || RIYO.equals(ruta)
-                || HITSUKI.equals(ruta)
-                || RUDO.equals(ruta)
-                || ASUNA.equals(ruta)
-                || ASUNA2.equals(ruta)
-                //gaming
-                || REDTECLADO.equals(ruta)
-                || REDAUDIFONOS.equals(ruta)
-                || REDMOUSE.equals(ruta)
-                || XBOX.equals(ruta)
-                || PS5.equals(ruta)
-                ;
+            || NERO.equals(ruta)
+            || ASTA.equals(ruta)
+            || CUADRO.equals(ruta)
+            || RIYO.equals(ruta)
+            || HITSUKI.equals(ruta)
+            || RUDO.equals(ruta)
+            || ASUNA.equals(ruta)
+            || ASUNA2.equals(ruta)
+            || REDTECLADO.equals(ruta)
+            || REDAUDIFONOS.equals(ruta)
+            || REDMOUSE.equals(ruta)
+            || XBOX.equals(ruta)
+            || PS5.equals(ruta);
     }
 
     public static boolean esRutaAlbum(String ruta) {
-
         return ALBUM_NOTHING.equals(ruta)
             || ALBUM_VOZ.equals(ruta)
             || ALBUM_COSANUESTRA.equals(ruta);
     }
 
     public static boolean esImagen(String ruta) {
-
         return ruta != null && ruta.startsWith(IMAGENES + "/");
     }
 
     public static boolean esPaginaValida(String ruta) {
-
         return INICIO.equals(ruta)
             || PRODUCTOS.equals(ruta)
             || TECNOLOGIA.equals(ruta)
             || GAMING.equals(ruta)
             || ACCESORIOS.equals(ruta)
             || MUSICA.equals(ruta)
+            || EQUIPO.equals(ruta)
             || SERVICIOS.equals(ruta)
             || NOSOTROS.equals(ruta)
             || SOLICITUDES.equals(ruta)
@@ -148,7 +139,6 @@ public final class Rutas {
     }
 
     public static String rutaEstadistica(String ruta) {
-
         if (BLOQUEADO.equals(ruta)) {
             return BLOQUEADO;
         }
