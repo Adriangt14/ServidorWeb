@@ -319,6 +319,7 @@ public final class AdminHandler {
 
     private static RespuestaHttp html(int codigo, String pagina) {
         return RespuestaHttp.html(codigo, pagina)
+            .reemplazarCabecera("Referrer-Policy", "same-origin")
             .cabecera("Cache-Control", "no-store")
             .cabecera("X-Robots-Tag", "noindex, nofollow");
     }

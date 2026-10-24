@@ -96,6 +96,11 @@ public final class RespuestaHttp {
         return this;
     }
 
+    public RespuestaHttp reemplazarCabecera(String nombre, String valor) {
+        cabeceras.removeIf(cabecera -> cabecera[0].equalsIgnoreCase(nombre));
+        return cabecera(nombre, valor);
+    }
+
     public int codigo() {
         return codigo;
     }
