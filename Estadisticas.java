@@ -27,7 +27,9 @@ public class Estadisticas {
         LOGIN_EXITOSO,
         LOGIN_FALLIDO,
         LOGIN_BLOQUEADO,
-        ACCESO_ADMIN_RECHAZADO
+        ACCESO_ADMIN_RECHAZADO,
+        BLOQUEO_TEMPORAL,
+        IP_BLOQUEADA
     }
 
     public enum MotivoSinRespuesta {
@@ -263,7 +265,8 @@ public class Estadisticas {
             eventos.get(TipoEvento.LIMITE_GLOBAL) +
             eventos.get(TipoEvento.LIMITE_PAGINAS) +
             eventos.get(TipoEvento.LIMITE_IMAGENES) +
-            eventos.get(TipoEvento.CAPACIDAD_IPS);
+            eventos.get(TipoEvento.CAPACIDAD_IPS) +
+            eventos.get(TipoEvento.IP_BLOQUEADA);
 
         return new Instantanea(
             INICIO_MILLIS,

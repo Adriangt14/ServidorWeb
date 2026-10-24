@@ -11,30 +11,58 @@ public final class LimitadorSolicitudes {
     private static final int MAX_SOLICITUDES_TOTALES_POR_VENTANA = 900;
     private static final int MAX_IPS_REGISTRADAS = 10_000;
 
+    public static final int UMBRAL_RECHAZOS_BLOQUEO = 60;
+    public static final long VENTANA_RECHAZOS_SEGUNDOS = 60;
+    public static final long DURACION_BLOQUEO_SEGUNDOS = 120;
+
     private static final long VENTANA_NANOS = TimeUnit.SECONDS.toNanos(60);
     private static final long INACTIVIDAD_NANOS = TimeUnit.MINUTES.toNanos(5);
     private static final long INTERVALO_LIMPIEZA_NANOS = TimeUnit.SECONDS.toNanos(5);
+    private static final long VENTANA_RECHAZOS_NANOS = TimeUnit.SECONDS.toNanos(VENTANA_RECHAZOS_SEGUNDOS);
+    private static final long DURACION_BLOQUEO_NANOS = TimeUnit.SECONDS.toNanos(DURACION_BLOQUEO_SEGUNDOS);
 
     private static final ConcurrentHashMap<String, LimitesCliente> clientes =
         new ConcurrentHashMap<>();
     private static final Object BLOQUEO_NUEVAS_IPS = new Object();
+    private static final AtomicLong BLOQUEOS_INICIADOS = new AtomicLong();
     private static volatile long ultimaLimpiezaNanos =
         System.nanoTime() - INTERVALO_LIMPIEZA_NANOS;
 
     private LimitadorSolicitudes() {
     }
 
-    public record Resultado(boolean permitido, long retryAfterSegundos, boolean sinCapacidad) {
+    public record Resultado(
+        boolean permitido,
+        long retryAfterSegundos,
+        boolean sinCapacidad,
+        boolean ipBloqueada
+    ) {
         public Resultado(boolean permitido, long retryAfterSegundos) {
-            this(permitido, retryAfterSegundos, false);
+            this(permitido, retryAfterSegundos, false, false);
+        }
+
+        public Resultado(boolean permitido, long retryAfterSegundos, boolean sinCapacidad) {
+            this(permitido, retryAfterSegundos, sinCapacidad, false);
         }
     }
 
     public static Resultado comprobarGlobal(String ip) {
-        LimitesCliente cliente = obtenerCliente(ip);
-        return cliente == null
-            ? new Resultado(false, 60, true)
-            : cliente.global.consumir();
+        String clave = normalizar(ip);
+        LimitesCliente cliente = obtenerCliente(clave);
+        if (cliente == null) {
+            return new Resultado(false, 60, true);
+        }
+
+        long restante = cliente.rechazos.restanteNanos(System.nanoTime());
+        if (restante > 0) {
+            return new Resultado(false, aSegundos(restante), false, true);
+        }
+
+        Resultado resultado = cliente.global.consumir();
+        if (!resultado.permitido()) {
+            registrarRechazo(clave, cliente);
+        }
+        return resultado;
     }
 
     public static Resultado comprobar(String ip) {
@@ -42,20 +70,82 @@ public final class LimitadorSolicitudes {
     }
 
     public static Resultado comprobar(String ip, boolean recursoImagen) {
-        LimitesCliente cliente = obtenerCliente(ip);
+        String clave = normalizar(ip);
+        LimitesCliente cliente = obtenerCliente(clave);
         if (cliente == null) {
             return new Resultado(false, 60, true);
         }
-        return recursoImagen
+
+        Resultado resultado = recursoImagen
             ? cliente.imagenes.consumir()
             : cliente.paginas.consumir();
+        if (!resultado.permitido()) {
+            registrarRechazo(clave, cliente);
+        }
+        return resultado;
     }
 
-    private static LimitesCliente obtenerCliente(String ipOriginal) {
-        String ip = (ipOriginal == null || ipOriginal.isBlank())
+    public static int ipsBloqueadasAhora() {
+        long ahora = System.nanoTime();
+        int total = 0;
+        for (LimitesCliente cliente : clientes.values()) {
+            if (cliente.rechazos.restanteNanos(ahora) > 0) {
+                total++;
+            }
+        }
+        return total;
+    }
+
+    public static int ipsSeguidas() {
+        return clientes.size();
+    }
+
+    static boolean esLoopback(String ip) {
+        return ip.startsWith("127.")
+            || ip.equals("::1")
+            || ip.equals("0:0:0:0:0:0:0:1");
+    }
+
+    private static void registrarRechazo(String ip, LimitesCliente cliente) {
+        if (esLoopback(ip)) {
+            return;
+        }
+
+        boolean iniciado = cliente.rechazos.registrar(
+            System.nanoTime(),
+            UMBRAL_RECHAZOS_BLOQUEO,
+            VENTANA_RECHAZOS_NANOS,
+            DURACION_BLOQUEO_NANOS
+        );
+
+        if (iniciado) {
+            Estadisticas.registrarEvento(
+                Estadisticas.TipoEvento.BLOQUEO_TEMPORAL,
+                ip,
+                UMBRAL_RECHAZOS_BLOQUEO + " rechazos en " + VENTANA_RECHAZOS_SEGUNDOS +
+                    " s: bloqueada " + (DURACION_BLOQUEO_SEGUNDOS / 60) + " min"
+            );
+            long total = BLOQUEOS_INICIADOS.incrementAndGet();
+            if (total == 1 || total % 100 == 0) {
+                System.out.println(
+                    "[BLOQUEO] IPs bloqueadas temporalmente: " + total + " | última: " + ip
+                );
+            }
+        }
+    }
+
+    private static String normalizar(String ipOriginal) {
+        return (ipOriginal == null || ipOriginal.isBlank())
             ? "desconocida"
             : ipOriginal.trim();
+    }
 
+    private static long aSegundos(long nanos) {
+        long segundo = TimeUnit.SECONDS.toNanos(1);
+        return Math.max(1L, (nanos + segundo - 1L) / segundo);
+    }
+
+    private static LimitesCliente obtenerCliente(String ip) {
         while (true) {
             long ahora = System.nanoTime();
             LimitesCliente existente = clientes.get(ip);
@@ -99,11 +189,53 @@ public final class LimitadorSolicitudes {
         while (iterador.hasNext()) {
             Map.Entry<String, LimitesCliente> entrada = iterador.next();
             LimitesCliente cliente = entrada.getValue();
+            if (cliente.rechazos.restanteNanos(ahora) > 0) {
+                continue;
+            }
             if (cliente.expirarSiInactivo(ahora, INACTIVIDAD_NANOS)) {
                 clientes.remove(entrada.getKey(), cliente);
             }
         }
         ultimaLimpiezaNanos = ahora;
+    }
+
+    static final class Rechazos {
+        private int cantidad;
+        private long inicioVentana;
+        private boolean bloqueado;
+        private long bloqueadoHasta;
+
+        synchronized boolean registrar(long ahora, int umbral, long ventana, long duracion) {
+            if (restanteNanos(ahora) > 0) {
+                return false;
+            }
+
+            if (cantidad == 0 || ahora - inicioVentana > ventana) {
+                inicioVentana = ahora;
+                cantidad = 0;
+            }
+
+            cantidad++;
+            if (cantidad >= umbral) {
+                bloqueado = true;
+                bloqueadoHasta = ahora + duracion;
+                cantidad = 0;
+                return true;
+            }
+            return false;
+        }
+
+        synchronized long restanteNanos(long ahora) {
+            if (!bloqueado) {
+                return 0;
+            }
+            long restante = bloqueadoHasta - ahora;
+            if (restante <= 0) {
+                bloqueado = false;
+                return 0;
+            }
+            return restante;
+        }
     }
 
     private static final class LimitesCliente {
@@ -113,6 +245,7 @@ public final class LimitadorSolicitudes {
             MAX_PAGINAS_POR_VENTANA, VENTANA_NANOS);
         private final LimitadorAtomico imagenes = new LimitadorAtomico(
             MAX_IMAGENES_POR_VENTANA, VENTANA_NANOS);
+        private final Rechazos rechazos = new Rechazos();
 
         private final AtomicLong estadoActividad;
 
@@ -179,12 +312,7 @@ public final class LimitadorSolicitudes {
 
                 if (ahora - instantePermitido < 0L) {
                     long esperaNanos = instantePermitido - ahora;
-                    long retry = Math.max(
-                        1L,
-                        (esperaNanos + TimeUnit.SECONDS.toNanos(1) - 1L)
-                            / TimeUnit.SECONDS.toNanos(1)
-                    );
-                    return new Resultado(false, retry);
+                    return new Resultado(false, aSegundos(esperaNanos));
                 }
 
                 long base = Math.max(llegadaAnterior, ahora);

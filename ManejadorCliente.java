@@ -72,7 +72,9 @@ public class ManejadorCliente {
                 Estadisticas.registrarEvento(
                     decisionGlobal.sinCapacidad()
                         ? Estadisticas.TipoEvento.CAPACIDAD_IPS
-                        : Estadisticas.TipoEvento.LIMITE_GLOBAL,
+                        : decisionGlobal.ipBloqueada()
+                            ? Estadisticas.TipoEvento.IP_BLOQUEADA
+                            : Estadisticas.TipoEvento.LIMITE_GLOBAL,
                     ip,
                     ""
                 );
