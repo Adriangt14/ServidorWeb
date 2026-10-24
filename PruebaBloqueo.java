@@ -134,13 +134,16 @@ public class PruebaBloqueo {
         caso("panel: cifras (recibidas, IPs bloqueadas, sesiones)", html.contains("Recibidas") && html.contains("IPs bloqueadas ahora") && html.contains("Sesiones admin"), "");
         caso("panel: muestra el bloqueo y la IP", html.contains("IP bloqueada temporalmente") && html.contains(atacante), "");
         caso("panel: códigos 200 y 429 en la tabla", html.contains("200 OK") && html.contains("429 Demasiadas solicitudes"), "");
-        caso("panel: rutas más visitadas incluye /servicios", html.contains("<td>/servicios</td>"), "");
+        caso("panel: rutas más visitadas incluye /servicios", html.contains("<span class=\"nombre\">/servicios</span>"), "");
         caso("panel: HTML de un atacante se muestra escapado", !html.contains("<script>") && html.contains("&lt;script&gt;"), "");
         caso("panel: conserva usuario y CSRF para cerrar sesión", html.contains("<strong>adrian</strong>") && html.matches("(?s).*name=\"csrf\" value=\"[A-Za-z0-9_-]{43}\".*"), "");
         caso("panel: sin scripts (CSP intacta)", !html.contains("<script") && "same-origin".equals(panel.cabecera("Referrer-Policy")), "");
 
         Respuesta sinSesion = get("/admin", ip("203.0.113.81"));
         caso("panel sin sesión sigue redirigiendo al formulario", sinSesion.codigo() == 303, "" + sinSesion.codigo());
+        caso("panel: fondo de la portada y vista de pantalla completa", html.contains("/imagenes/encabezado.jpeg") && html.contains("class=\"app\""), "");
+        Respuesta formulario = get("/admin/entrar", ip("203.0.113.82"));
+        caso("formulario de acceso con el mismo fondo", formulario.codigo() == 200 && formulario.cuerpo().contains("/imagenes/encabezado.jpeg") && formulario.cuerpo().contains("name=\"clave\""), "" + formulario.codigo());
 
         Files.writeString(Path.of(System.getProperty("java.io.tmpdir"), "panel_prueba.html"), html);
         System.out.println(fallos == 0 ? "RESULTADO: TODO OK" : "RESULTADO: " + fallos + " FALLOS");

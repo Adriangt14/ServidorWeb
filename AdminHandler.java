@@ -356,160 +356,200 @@ public final class AdminHandler {
     }
 
     private static String paginaEntrar(String usuario, String mensaje) {
-        String aviso = mensaje == null ? "" : "<p class=\"aviso\" role=\"alert\">" + escaparHtml(mensaje) + "</p>";
+        String aviso = mensaje == null ? "" : "<p class=\"error-entrada\" role=\"alert\">" + escaparHtml(mensaje) + "</p>";
 
-        return plantilla(
-            "Acceso al panel",
-            """
-            <form class="tarjeta" method="post" action="%s" autocomplete="on">
-                <p class="etiqueta">NEXUS UMG · ADMINISTRACIÓN</p>
-                <h1>Acceso al panel</h1>
-                %s
-                <label for="usuario">Usuario</label>
-                <input id="usuario" name="usuario" type="text" value="%s" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
-                <label for="clave">Contraseña</label>
-                <input id="clave" name="clave" type="password" maxlength="128" autocomplete="current-password" required>
-                <button type="submit">Entrar</button>
-                <a class="volver" href="/">← Volver al sitio</a>
-            </form>
-            """.formatted(RUTA_ENTRAR, aviso, escaparHtml(usuario))
-        );
+        String contenido = """
+            <main class="entrada">
+                <form class="vidrio tarjeta-entrada" method="post" action="%s" autocomplete="on">
+                    <a class="marca" href="/">NEXUS <span>UMG</span></a>
+                    <p class="etiqueta">Centro de control</p>
+                    <h1>Acceso al panel</h1>
+                    %s
+                    <label for="usuario">Usuario</label>
+                    <input id="usuario" name="usuario" type="text" value="%s" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+                    <label for="clave">Contraseña</label>
+                    <input id="clave" name="clave" type="password" maxlength="128" autocomplete="current-password" required>
+                    <button type="submit">Entrar</button>
+                    <a class="volver" href="/">← Volver al sitio</a>
+                </form>
+            </main>
+            """.formatted(RUTA_ENTRAR, aviso, escaparHtml(usuario));
+
+        return plantilla("Acceso al panel", contenido, 0);
     }
 
     private static String paginaPanel(SesionesAdmin.Sesion sesion) {
         Estadisticas.Instantanea e = Estadisticas.instantanea();
         int ipsBloqueadas = LimitadorSolicitudes.ipsBloqueadasAhora();
 
-        StringBuilder html = new StringBuilder(8192);
-        html.append("<section class=\"tarjeta panel\">");
-        html.append("<div class=\"cabecera-panel\"><div>");
-        html.append("<p class=\"etiqueta\">NEXUS UMG · ADMINISTRACIÓN</p>");
-        html.append("<h1>Panel de administración</h1>");
-        html.append("<p class=\"meta\">Sesión iniciada como <strong>")
-            .append(escaparHtml(sesion.usuario()))
-            .append("</strong>. Actualizado ")
-            .append(escaparHtml(FORMATO_HORA.format(Instant.ofEpochMilli(e.momentoMillis()))))
-            .append(" · Encendido hace ")
+        StringBuilder html = new StringBuilder(16_384);
+        html.append("<div class=\"app\">");
+
+        html.append("<header class=\"barra vidrio\">");
+        html.append("<div class=\"barra-marca\"><a class=\"marca\" href=\"/\">NEXUS <span>UMG</span></a>")
+            .append("<span class=\"subtitulo\">Centro de control</span></div>");
+        html.append("<div class=\"barra-estado\"><span class=\"punto\"></span>En línea · encendido hace ")
             .append(escaparHtml(duracion(e.momentoMillis() - e.inicioMillis())))
-            .append(" · Se recarga cada ").append(SEGUNDOS_RECARGA).append(" s.</p>");
-        html.append("</div><div class=\"acciones\">");
+            .append(" · actualizado ")
+            .append(escaparHtml(FORMATO_HORA.format(Instant.ofEpochMilli(e.momentoMillis()))))
+            .append(" · se recarga cada ").append(SEGUNDOS_RECARGA).append(" s</div>");
+        html.append("<div class=\"acciones\"><span class=\"usuario\">Sesión iniciada como <strong>")
+            .append(escaparHtml(sesion.usuario())).append("</strong></span>");
         html.append("<a class=\"boton-sec\" href=\"").append(RUTA_PANEL).append("\">Actualizar</a>");
         html.append("<form method=\"post\" action=\"").append(RUTA_SALIR).append("\">");
         html.append("<input type=\"hidden\" name=\"csrf\" value=\"")
             .append(escaparHtml(sesion.tokenCsrf())).append("\">");
-        html.append("<button type=\"submit\">Cerrar sesión</button></form>");
-        html.append("</div></div>");
+        html.append("<button type=\"submit\">Cerrar sesión</button></form></div>");
+        html.append("</header>");
 
-        html.append("<div class=\"cifras\">");
-        cifra(html, "Recibidas", e.recibidas(), false);
-        cifra(html, "Atendidas", e.atendidas(), false);
-        cifra(html, "Respuestas 2xx", e.aceptadas(), false);
-        cifra(html, "Frenadas (429)", e.bloqueadasPorLimitador(), e.bloqueadasPorLimitador() > 0);
-        cifra(html, "Saturación (503)", e.rechazadasPorCapacidad(), e.rechazadasPorCapacidad() > 0);
-        cifra(html, "Activas ahora", e.activas(), false);
-        cifra(html, "En cola", e.enCola(), e.enCola() > 0);
-        cifra(html, "IPs bloqueadas ahora", ipsBloqueadas, ipsBloqueadas > 0);
-        cifra(html, "IPs en seguimiento", LimitadorSolicitudes.ipsSeguidas(), false);
-        cifra(html, "Sesiones admin", SESIONES.activas(), false);
-        html.append("</div>");
+        html.append("<main class=\"tablero\">");
 
-        html.append("<div class=\"rejilla\">");
+        html.append("<section class=\"kpis\" aria-label=\"Resumen\">");
+        cifra(html, "Recibidas", e.recibidas(), "");
+        cifra(html, "Respuestas 2xx", e.aceptadas(), "bien");
+        cifra(html, "Frenadas (429)", e.bloqueadasPorLimitador(), e.bloqueadasPorLimitador() > 0 ? "aviso" : "");
+        cifra(html, "Saturación (503)", e.rechazadasPorCapacidad(), e.rechazadasPorCapacidad() > 0 ? "alerta" : "");
+        cifra(html, "IPs bloqueadas ahora", ipsBloqueadas, ipsBloqueadas > 0 ? "alerta" : "");
+        cifra(html, "Atendidas", e.atendidas(), "");
+        cifra(html, "Activas ahora", e.activas(), "");
+        cifra(html, "En cola", e.enCola(), e.enCola() > 0 ? "aviso" : "");
+        cifra(html, "IPs en seguimiento", LimitadorSolicitudes.ipsSeguidas(), "");
+        cifra(html, "Sesiones admin", SESIONES.activas(), "");
+        html.append("</section>");
 
-        abrirBloque(html, "Respuestas por código", "Código", "Total");
+        abrirPanel(html, "p-codigos", "Respuestas por código");
+        long maxCodigo = 1;
+        for (long valor : e.respuestasPorCodigo().values()) {
+            maxCodigo = Math.max(maxCodigo, valor);
+        }
         if (e.respuestasPorCodigo().isEmpty()) {
-            filaVacia(html, 2, "Sin respuestas todavía.");
+            vacio(html, "Sin respuestas todavía.");
         }
         for (Map.Entry<Integer, Long> entrada : e.respuestasPorCodigo().entrySet()) {
-            fila(html, entrada.getKey() + " " + razon(entrada.getKey()), entrada.getValue());
+            barra(html, entrada.getKey() + " " + razon(entrada.getKey()), entrada.getValue(), maxCodigo, claseCodigo(entrada.getKey()));
         }
-        cerrarBloque(html);
+        cerrarPanel(html);
 
-        abrirBloque(html, "Eventos por tipo", "Evento", "Total");
+        abrirPanel(html, "p-tipos", "Eventos por tipo");
+        long maxEvento = 1;
+        for (long valor : e.eventosPorTipo().values()) {
+            maxEvento = Math.max(maxEvento, valor);
+        }
         boolean hayEventos = false;
         for (Map.Entry<Estadisticas.TipoEvento, Long> entrada : e.eventosPorTipo().entrySet()) {
             if (entrada.getValue() > 0) {
                 hayEventos = true;
-                fila(html, nombreEvento(entrada.getKey()), entrada.getValue());
+                barra(html, nombreEvento(entrada.getKey()), entrada.getValue(), maxEvento, gravedad(entrada.getKey()));
             }
         }
         if (!hayEventos) {
-            filaVacia(html, 2, "Sin eventos registrados.");
+            vacio(html, "Sin eventos registrados.");
         }
-        cerrarBloque(html);
+        cerrarPanel(html);
 
-        abrirBloque(html, "Rutas más visitadas", "Ruta", "Visitas");
+        abrirPanel(html, "p-rutas", "Rutas más visitadas");
         List<Estadisticas.RutaVisitada> rutas = Estadisticas.getTopRutas(10);
+        long maxRuta = rutas.isEmpty() ? 1 : Math.max(1, rutas.get(0).total());
         if (rutas.isEmpty()) {
-            filaVacia(html, 2, "Sin visitas todavía.");
+            vacio(html, "Sin visitas todavía.");
         }
         for (Estadisticas.RutaVisitada ruta : rutas) {
-            fila(html, ruta.ruta(), ruta.total());
+            barra(html, ruta.ruta(), ruta.total(), maxRuta, "oro");
         }
-        cerrarBloque(html);
+        cerrarPanel(html);
 
-        abrirBloque(html, "Conexiones sin respuesta", "Motivo", "Total");
+        html.append("<section class=\"vidrio panel p-sin\"><h2>Conexiones sin respuesta</h2><div class=\"chips\">");
         boolean haySinRespuesta = false;
         for (Map.Entry<Estadisticas.MotivoSinRespuesta, Long> entrada : e.sinRespuesta().entrySet()) {
             if (entrada.getValue() > 0) {
                 haySinRespuesta = true;
-                fila(html, nombreMotivo(entrada.getKey()), entrada.getValue());
+                html.append("<span class=\"chip\">").append(escaparHtml(nombreMotivo(entrada.getKey())))
+                    .append(" <b>").append(entrada.getValue()).append("</b></span>");
             }
         }
         if (!haySinRespuesta) {
-            filaVacia(html, 2, "Ninguna.");
+            html.append("<span class=\"vacio\">Ninguna.</span>");
         }
-        cerrarBloque(html);
+        html.append("</div></section>");
 
-        html.append("</div>");
-
-        html.append("<div class=\"bloque\"><h2>Últimos eventos</h2><div class=\"tabla\"><table>");
-        html.append("<thead><tr><th>Hora</th><th>Evento</th><th>IP</th><th>Detalle</th><th class=\"num\">Veces</th></tr></thead><tbody>");
+        html.append("<aside class=\"vidrio panel p-feed\"><h2>Últimos eventos</h2><div class=\"cuerpo\"><ol class=\"feed\">");
         List<Estadisticas.EventoReciente> recientes = Estadisticas.getEventosRecientes(MAX_EVENTOS_PANEL);
         if (recientes.isEmpty()) {
-            filaVacia(html, 5, "Sin eventos registrados.");
+            html.append("<li class=\"vacio\">Sin eventos registrados.</li>");
         }
         for (Estadisticas.EventoReciente evento : recientes) {
-            html.append("<tr><td>")
+            html.append("<li class=\"ev ").append(gravedad(evento.tipo())).append("\">")
+                .append("<span class=\"ev-hora\">")
                 .append(escaparHtml(FORMATO_HORA.format(Instant.ofEpochMilli(evento.ultimoMillis()))))
-                .append("</td><td>").append(escaparHtml(nombreEvento(evento.tipo())))
-                .append("</td><td>").append(escaparHtml(evento.ip()))
-                .append("</td><td>").append(escaparHtml(evento.detalle()))
-                .append("</td><td class=\"num\">").append(evento.repeticiones())
-                .append("</td></tr>");
+                .append("</span><div class=\"ev-texto\"><strong>").append(escaparHtml(nombreEvento(evento.tipo())))
+                .append("</strong><span class=\"ev-ip\">").append(escaparHtml(evento.ip())).append("</span>");
+            if (!evento.detalle().isEmpty()) {
+                html.append("<span class=\"ev-det\">").append(escaparHtml(evento.detalle())).append("</span>");
+            }
+            html.append("</div>");
+            if (evento.repeticiones() > 1) {
+                html.append("<span class=\"ev-veces\">×").append(evento.repeticiones()).append("</span>");
+            }
+            html.append("</li>");
         }
-        html.append("</tbody></table></div></div>");
+        html.append("</ol></div></aside>");
 
-        html.append("<p class=\"vacio\">Datos en memoria desde el último arranque del servidor. ")
-            .append("Al reiniciarlo vuelven a cero. Se guardan como máximo los 100 eventos más recientes.</p>");
-        html.append("</section>");
+        html.append("</main>");
+        html.append("<footer class=\"pie\">Datos en memoria desde el último arranque; al reiniciar el servidor vuelven a cero. ")
+            .append("Se guardan como máximo los 100 eventos más recientes.</footer>");
+        html.append("</div>");
 
         return plantilla("Panel de administración", html.toString(), SEGUNDOS_RECARGA);
     }
 
-    private static void cifra(StringBuilder html, String nombre, long valor, boolean alerta) {
-        html.append("<div class=\"cifra").append(alerta ? " alerta" : "").append("\"><span>")
+    private static void cifra(StringBuilder html, String nombre, long valor, String clase) {
+        html.append("<div class=\"vidrio cifra ").append(clase).append("\"><span>")
             .append(escaparHtml(nombre)).append("</span><strong>").append(valor).append("</strong></div>");
     }
 
-    private static void abrirBloque(StringBuilder html, String titulo, String columna, String columnaNumero) {
-        html.append("<div class=\"bloque\"><h2>").append(escaparHtml(titulo))
-            .append("</h2><div class=\"tabla\"><table><thead><tr><th>").append(escaparHtml(columna))
-            .append("</th><th class=\"num\">").append(escaparHtml(columnaNumero))
-            .append("</th></tr></thead><tbody>");
+    private static void abrirPanel(StringBuilder html, String clase, String titulo) {
+        html.append("<section class=\"vidrio panel ").append(clase).append("\"><h2>")
+            .append(escaparHtml(titulo)).append("</h2><div class=\"cuerpo\"><ul class=\"barras\">");
     }
 
-    private static void cerrarBloque(StringBuilder html) {
-        html.append("</tbody></table></div></div>");
+    private static void cerrarPanel(StringBuilder html) {
+        html.append("</ul></div></section>");
     }
 
-    private static void fila(StringBuilder html, String nombre, long valor) {
-        html.append("<tr><td>").append(escaparHtml(nombre))
-            .append("</td><td class=\"num\">").append(valor).append("</td></tr>");
+    private static void vacio(StringBuilder html, String texto) {
+        html.append("<li class=\"vacio\">").append(escaparHtml(texto)).append("</li>");
     }
 
-    private static void filaVacia(StringBuilder html, int columnas, String texto) {
-        html.append("<tr><td class=\"vacio\" colspan=\"").append(columnas).append("\">")
-            .append(escaparHtml(texto)).append("</td></tr>");
+    private static void barra(StringBuilder html, String nombre, long valor, long maximo, String clase) {
+        long ancho = Math.max(2, Math.min(100, Math.round(valor * 100.0 / Math.max(1, maximo))));
+        html.append("<li class=\"").append(clase).append("\"><div class=\"fila\"><span class=\"nombre\">")
+            .append(escaparHtml(nombre)).append("</span><span class=\"valor\">").append(valor)
+            .append("</span></div><div class=\"pista\"><i style=\"width:").append(ancho).append("%\"></i></div></li>");
+    }
+
+    private static String claseCodigo(int codigo) {
+        if (codigo >= 500) {
+            return "alerta";
+        }
+        if (codigo == 429 || codigo == 401 || codigo == 403) {
+            return "aviso";
+        }
+        if (codigo >= 400) {
+            return "neutro";
+        }
+        if (codigo >= 300) {
+            return "info";
+        }
+        return "bien";
+    }
+
+    private static String gravedad(Estadisticas.TipoEvento tipo) {
+        return switch (tipo) {
+            case LOGIN_EXITOSO -> "bien";
+            case LIMITE_GLOBAL, LIMITE_PAGINAS, LIMITE_IMAGENES, RUTA_PROTEGIDA, SOLICITUD_INVALIDA -> "aviso";
+            case CAPACIDAD_IPS, SATURACION, ORIGEN_NO_VERIFICADO, LOGIN_FALLIDO, LOGIN_BLOQUEADO,
+                ACCESO_ADMIN_RECHAZADO, BLOQUEO_TEMPORAL, IP_BLOQUEADA -> "alerta";
+        };
     }
 
     private static String razon(int codigo) {
@@ -579,126 +619,299 @@ public final class AdminHandler {
         return segundos + " s";
     }
 
-    private static String plantilla(String titulo, String contenido) {
-        return plantilla(titulo, contenido, 0);
-    }
-
     private static String plantilla(String titulo, String contenido, int segundosRecarga) {
         String recarga = segundosRecarga > 0
             ? "<meta http-equiv=\"refresh\" content=\"" + segundosRecarga + "\">"
             : "";
-        return """
-            <!DOCTYPE html>
-            <html lang="es">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <meta name="robots" content="noindex, nofollow">
-                %s
-                <link rel="icon" href="data:,">
-                <title>%s | Nexus UMG</title>
-                <style>
-                    * { box-sizing: border-box; }
-                    body {
-                        margin: 0;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 24px 16px;
-                        background: #10171d;
-                        color: #e8e0d4;
-                        font-family: Inter, Arial, sans-serif;
-                    }
-                    .tarjeta {
-                        width: 100%%;
-                        max-width: 380px;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 10px;
-                        padding: 28px;
-                        background: #0a0f13;
-                        border: 1px solid #514532;
-                    }
-                    .ancha { max-width: 560px; }
-                    .etiqueta {
-                        margin: 0;
-                        color: #c9a46a;
-                        font-size: 10px;
-                        font-weight: 600;
-                        letter-spacing: 2px;
-                    }
-                    h1 {
-                        margin: 0 0 8px;
-                        font-family: 'Cormorant Garamond', Georgia, serif;
-                        font-weight: 500;
-                        font-size: 32px;
-                        color: #f5ecdf;
-                    }
-                    label { font-size: 12px; color: #aab0b5; }
-                    input {
-                        padding: 11px 12px;
-                        background: #151e24;
-                        color: #f0e6d6;
-                        border: 1px solid #514532;
-                        font-size: 15px;
-                    }
-                    input:focus { outline: 2px solid #c9a46a; outline-offset: 1px; }
-                    button {
-                        margin-top: 10px;
-                        padding: 12px 15px;
-                        border: 1px solid #c9a46a;
-                        background: #c9a46a;
-                        color: #171b1e;
-                        font-size: 13px;
-                        font-weight: 600;
-                        cursor: pointer;
-                    }
-                    button:hover { background: transparent; color: #f0e6d6; }
-                    .aviso {
-                        margin: 0;
-                        padding: 10px 12px;
-                        background: #2a1616;
-                        border: 1px solid #8a3b3b;
-                        color: #f2c9c9;
-                        font-size: 13px;
-                    }
-                    .nota { color: #aab0b5; font-size: 13px; }
-                    .volver { margin-top: 6px; color: #aab0b5; font-size: 12px; text-decoration: none; }
-                    .volver:hover { color: #c9a46a; }
-                    .panel { max-width: 1100px; gap: 18px; }
-                    .cabecera-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px; }
-                    .meta { margin: 0; color: #aab0b5; font-size: 13px; line-height: 1.5; }
-                    .meta strong { color: #f0e6d6; }
-                    .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-                    .acciones form { margin: 0; }
-                    .acciones button { margin-top: 0; }
-                    .boton-sec { padding: 11px 14px; border: 1px solid #514532; color: #e8e0d4; font-size: 13px; text-decoration: none; }
-                    .boton-sec:hover { border-color: #c9a46a; color: #c9a46a; }
-                    .cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-                    .cifra { padding: 14px; background: #151e24; border: 1px solid #2c3640; }
-                    .cifra span { display: block; color: #aab0b5; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
-                    .cifra strong { display: block; margin-top: 6px; color: #f5ecdf; font-size: 26px; font-weight: 600; }
-                    .cifra.alerta { border-color: #8a3b3b; }
-                    .cifra.alerta strong { color: #f2b0b0; }
-                    .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
-                    .bloque { min-width: 0; padding: 14px; background: #0d1318; border: 1px solid #2c3640; }
-                    .bloque h2 { margin: 0 0 10px; color: #c9a46a; font-family: Inter, Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-                    .tabla { overflow-x: auto; }
-                    table { width: 100%%; border-collapse: collapse; font-size: 13px; }
-                    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #1f2a33; vertical-align: top; }
-                    th { color: #aab0b5; font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
-                    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-                    .vacio { margin: 0; color: #77808a; font-size: 12px; }
-                    @media (max-width: 600px) { .panel { padding: 18px; } .cifra strong { font-size: 22px; } }
-                </style>
-            </head>
-            <body>
-                %s
-            </body>
-            </html>
-            """.formatted(recarga, escaparHtml(titulo), contenido);
+        return PLANTILLA
+            .replace("{{RECARGA}}", recarga)
+            .replace("{{TITULO}}", escaparHtml(titulo))
+            .replace("{{CONTENIDO}}", contenido);
     }
+
+    private static final String PLANTILLA = """
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="robots" content="noindex, nofollow">
+            <meta name="theme-color" content="#0a0f13">
+            {{RECARGA}}
+            <link rel="icon" href="data:,">
+            <title>{{TITULO}} | Nexus UMG</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+            <style>
+                :root {
+                    --oro: #c9a46a;
+                    --marfil: #f5ecdf;
+                    --texto: #e8e0d4;
+                    --suave: #aab0b5;
+                    --tenue: #7d868f;
+                    --vidrio: rgba(10, 15, 19, 0.7);
+                    --borde: rgba(201, 164, 106, 0.26);
+                    --linea: rgba(255, 255, 255, 0.07);
+                    --bien: #86c9a0;
+                    --info: #8fb4d9;
+                    --aviso: #e2c27a;
+                    --alerta: #ec8f8f;
+                }
+                * { box-sizing: border-box; }
+                html, body { margin: 0; min-height: 100%; }
+                body {
+                    background: #0a0f13;
+                    color: var(--texto);
+                    font-family: Inter, Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.45;
+                }
+                body::before {
+                    content: "";
+                    position: fixed;
+                    inset: 0;
+                    z-index: -1;
+                    background:
+                        linear-gradient(115deg, rgba(8, 13, 17, 0.9) 0%, rgba(8, 13, 17, 0.72) 50%, rgba(8, 13, 17, 0.42) 100%),
+                        url('/imagenes/encabezado.jpeg') center / cover no-repeat;
+                }
+                a { color: inherit; text-decoration: none; }
+                .vidrio {
+                    background: var(--vidrio);
+                    border: 1px solid var(--borde);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                }
+                .marca {
+                    font-family: 'Cormorant Garamond', Georgia, serif;
+                    font-size: 26px;
+                    letter-spacing: 1.5px;
+                    color: var(--marfil);
+                }
+                .marca span { color: var(--oro); }
+                .etiqueta {
+                    margin: 0;
+                    color: var(--oro);
+                    font-size: 10px;
+                    font-weight: 600;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                }
+                h1 {
+                    margin: 0 0 6px;
+                    font-family: 'Cormorant Garamond', Georgia, serif;
+                    font-weight: 500;
+                    font-size: 34px;
+                    color: var(--marfil);
+                }
+                button {
+                    padding: 10px 15px;
+                    border: 1px solid var(--oro);
+                    background: var(--oro);
+                    color: #171b1e;
+                    font: 600 13px Inter, Arial, sans-serif;
+                    cursor: pointer;
+                }
+                button:hover { background: transparent; color: var(--marfil); }
+                .boton-sec {
+                    padding: 9px 14px;
+                    border: 1px solid var(--borde);
+                    color: var(--texto);
+                    font-size: 13px;
+                }
+                .boton-sec:hover { border-color: var(--oro); color: var(--oro); }
+
+                .entrada {
+                    min-height: 100vh;
+                    display: grid;
+                    place-items: center;
+                    padding: 24px 16px;
+                }
+                .tarjeta-entrada {
+                    width: 100%;
+                    max-width: 400px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    padding: 32px 30px;
+                }
+                .tarjeta-entrada .marca { margin-bottom: 14px; }
+                label { margin-top: 4px; font-size: 12px; color: var(--suave); }
+                input {
+                    padding: 11px 12px;
+                    background: rgba(21, 30, 36, 0.85);
+                    color: var(--marfil);
+                    border: 1px solid var(--borde);
+                    font-size: 15px;
+                }
+                input:focus { outline: 2px solid var(--oro); outline-offset: 1px; }
+                .tarjeta-entrada button { margin-top: 12px; }
+                .error-entrada {
+                    margin: 0;
+                    padding: 10px 12px;
+                    background: rgba(70, 24, 24, 0.75);
+                    border: 1px solid #8a3b3b;
+                    color: #f2c9c9;
+                    font-size: 13px;
+                }
+                .volver { margin-top: 6px; color: var(--suave); font-size: 12px; }
+                .volver:hover { color: var(--oro); }
+
+                .app {
+                    height: 100vh;
+                    display: grid;
+                    grid-template-rows: auto minmax(0, 1fr) auto;
+                    gap: 12px;
+                    padding: 14px 18px 10px;
+                }
+                .barra {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px 20px;
+                    padding: 10px 16px;
+                }
+                .barra-marca { display: flex; align-items: baseline; gap: 12px; }
+                .subtitulo {
+                    color: var(--oro);
+                    font-size: 10px;
+                    font-weight: 600;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                }
+                .barra-estado { display: flex; align-items: center; gap: 8px; color: var(--suave); font-size: 12px; }
+                .punto {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--bien);
+                    box-shadow: 0 0 0 3px rgba(134, 201, 160, 0.18);
+                }
+                .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+                .acciones form { margin: 0; }
+                .usuario { color: var(--suave); font-size: 12px; }
+                .usuario strong { color: var(--marfil); }
+
+                .tablero {
+                    min-height: 0;
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(290px, 0.95fr);
+                    grid-template-rows: auto minmax(0, 1fr) auto;
+                    gap: 12px;
+                }
+                .kpis {
+                    grid-column: 1 / 4;
+                    display: grid;
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                    gap: 10px;
+                }
+                .cifra { padding: 10px 14px; border-left: 3px solid var(--borde); }
+                .cifra span {
+                    display: block;
+                    color: var(--suave);
+                    font-size: 10px;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .cifra strong {
+                    display: block;
+                    margin-top: 2px;
+                    color: var(--marfil);
+                    font-size: 26px;
+                    font-weight: 600;
+                    font-variant-numeric: tabular-nums;
+                }
+                .cifra.bien { border-left-color: var(--bien); }
+                .cifra.aviso { border-left-color: var(--aviso); }
+                .cifra.aviso strong { color: var(--aviso); }
+                .cifra.alerta { border-left-color: var(--alerta); }
+                .cifra.alerta strong { color: var(--alerta); }
+
+                .panel {
+                    min-height: 0;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 12px 14px;
+                }
+                .panel h2 {
+                    margin: 0 0 10px;
+                    color: var(--oro);
+                    font: 600 11px Inter, Arial, sans-serif;
+                    letter-spacing: 1.5px;
+                    text-transform: uppercase;
+                }
+                .cuerpo { min-height: 0; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #514532 transparent; }
+                .barras, .feed { list-style: none; margin: 0; padding: 0; }
+                .barras li { padding: 6px 0; border-bottom: 1px solid var(--linea); }
+                .barras li:last-child { border-bottom: 0; }
+                .fila { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+                .nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .valor { color: var(--marfil); font-weight: 600; font-variant-numeric: tabular-nums; }
+                .pista { height: 4px; margin-top: 5px; background: var(--linea); }
+                .pista i { display: block; height: 100%; background: var(--oro); }
+                .bien .pista i { background: var(--bien); }
+                .info .pista i { background: var(--info); }
+                .aviso .pista i { background: var(--aviso); }
+                .alerta .pista i { background: var(--alerta); }
+                .neutro .pista i { background: var(--tenue); }
+                .vacio { color: var(--tenue); font-size: 12px; border: 0; }
+
+                .p-sin { grid-column: 1 / 4; flex-direction: row; align-items: center; gap: 14px; padding: 10px 14px; }
+                .p-sin h2 { margin: 0; white-space: nowrap; }
+                .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+                .chip { padding: 3px 10px; border: 1px solid var(--borde); font-size: 12px; color: var(--suave); }
+                .chip b { color: var(--marfil); }
+
+                .p-feed { grid-column: 4; grid-row: 1 / 4; }
+                .ev {
+                    display: grid;
+                    grid-template-columns: auto minmax(0, 1fr) auto;
+                    gap: 10px;
+                    padding: 8px 0 8px 10px;
+                    border-bottom: 1px solid var(--linea);
+                    border-left: 3px solid var(--tenue);
+                }
+                .ev.bien { border-left-color: var(--bien); }
+                .ev.aviso { border-left-color: var(--aviso); }
+                .ev.alerta { border-left-color: var(--alerta); }
+                .ev-hora { color: var(--tenue); font-size: 11px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+                .ev-texto { display: flex; flex-direction: column; min-width: 0; }
+                .ev-texto strong { font-size: 13px; font-weight: 500; color: var(--marfil); }
+                .ev-ip, .ev-det { font-size: 12px; color: var(--suave); overflow-wrap: anywhere; }
+                .ev-det { color: var(--tenue); }
+                .ev-veces { align-self: start; padding: 1px 7px; border: 1px solid var(--borde); color: var(--oro); font-size: 11px; }
+
+                .pie { color: var(--tenue); font-size: 11px; text-align: center; }
+
+                @media (max-width: 1100px), (max-height: 600px) {
+                    .app { height: auto; min-height: 100vh; }
+                    .tablero { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
+                    .kpis, .p-sin, .p-feed { grid-column: 1 / -1; grid-row: auto; }
+                    .kpis { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+                    .panel { max-height: 360px; }
+                    .p-feed { max-height: 460px; }
+                    .p-rutas { grid-column: 1 / -1; }
+                }
+                @media (max-width: 640px) {
+                    .app { padding: 10px; }
+                    .tablero { grid-template-columns: minmax(0, 1fr); }
+                    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                    .barra { padding: 12px; }
+                    .cifra strong { font-size: 22px; }
+                    .p-sin { flex-direction: column; align-items: flex-start; }
+                }
+            </style>
+        </head>
+        <body>
+            {{CONTENIDO}}
+        </body>
+        </html>
+        """;
 
     private static String escaparHtml(String texto) {
         if (texto == null) return "";
