@@ -78,7 +78,7 @@ public class GestorHilos {
 
         try {
             threadPool.execute(
-                new TareaCliente(clienteSocket, id)
+                new TareaCliente(clienteSocket, id, System.nanoTime())
             );
             return true;
 
@@ -185,18 +185,20 @@ public class GestorHilos {
     private final class TareaCliente implements Runnable {
         private final Socket socket;
         private final String id;
+        private final long aceptadaNanos;
         private final AtomicBoolean terminada =
             new AtomicBoolean(false);
 
-        private TareaCliente(Socket socket, String id) {
+        private TareaCliente(Socket socket, String id, long aceptadaNanos) {
             this.socket = socket;
             this.id = id;
+            this.aceptadaNanos = aceptadaNanos;
         }
 
         @Override
         public void run() {
             try {
-                ManejadorCliente.atender(socket, id);
+                ManejadorCliente.atender(socket, id, aceptadaNanos);
             } finally {
                 socketsControlados.remove(socket);
                 terminada.set(true);

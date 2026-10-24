@@ -32,6 +32,32 @@ public class PruebaSolicitudHttp {
         }
     }
 
+    static String trasCola(ServerSocket servidor, String crudo, boolean completa) throws Exception {
+        Thread cliente = new Thread(() -> {
+            try (Socket s = new Socket("127.0.0.1", servidor.getLocalPort())) {
+                OutputStream o = s.getOutputStream();
+                o.write(crudo.getBytes(StandardCharsets.ISO_8859_1)); o.flush();
+                Thread.sleep(completa ? 300 : 2500);
+            } catch (Exception ignored) { }
+        });
+        cliente.start();
+        try (Socket s = servidor.accept()) {
+            Thread.sleep(100);
+            long llegadaAntigua = System.nanoTime() - java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+            long t0 = System.nanoTime();
+            try {
+                SolicitudHttp sol = SolicitudHttp.leerHasta(s, ManejadorCliente.plazoLectura(llegadaAntigua));
+                sol.interpretarLinea();
+                return "OK ruta=" + sol.objetivo();
+            } catch (Exception e) {
+                long ms = (System.nanoTime() - t0) / 1_000_000;
+                return "EXC " + e.getClass().getSimpleName() + " tras " + (ms < 1000 ? "menos de 1 s" : ms + " ms");
+            }
+        } finally {
+            cliente.join();
+        }
+    }
+
     static void caso(String nombre, String real, String esperadoComienza) {
         boolean ok = real.startsWith(esperadoComienza);
         if (!ok) fallos++;
@@ -53,6 +79,8 @@ public class PruebaSolicitudHttp {
             caso("cuerpo lento (supera plazo 1 s)", procesar(srv, "POST / HTTP/1.1\r\nContent-Length: 6\r\n\r\nabc", 1500, "def"), "EXC SocketTimeoutException");
             caso("cuerpo vacio Content-Length: 0", procesar(srv, "POST / HTTP/1.1\r\nContent-Length: 0\r\n\r\n", 0, ""), "OK cuerpo= ruta=/ consulta=null cookie=null");
             caso("cuerpo en dos partes (a tiempo)", procesar(srv, "POST / HTTP/1.1\r\nContent-Length: 6\r\n\r\nabc", 300, "def"), "OK cuerpo=abcdef");
+            caso("completa tras 10 s en cola", trasCola(srv, "GET /gaming HTTP/1.1\r\nHost: x\r\n\r\n", true), "OK ruta=/gaming");
+            caso("lenta tras 10 s en cola", trasCola(srv, "GET / HTTP/1.1\r\nHost: x\r\n", false), "EXC SocketTimeoutException tras menos de 1 s");
         }
         System.out.println(fallos == 0 ? "RESULTADO: TODO OK" : "RESULTADO: " + fallos + " FALLOS");
         System.exit(fallos == 0 ? 0 : 1);

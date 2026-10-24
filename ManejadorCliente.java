@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.Locale;
 public class ManejadorCliente {
 
     private static final int TIMEOUT_LECTURA_MS = 5000;
+    private static final long PLAZO_LECTURA_NANOS = TimeUnit.MILLISECONDS.toNanos(TIMEOUT_LECTURA_MS);
+    private static final long GRACIA_TRAS_COLA_NANOS = TimeUnit.MILLISECONDS.toNanos(300);
     private static final long MAX_TAMANO_IMAGEN_BYTES = 8L * 1024 * 1024;
     private static final long MAX_CACHE_IMAGENES_BYTES = 32L * 1024 * 1024;
 
@@ -27,6 +30,10 @@ public class ManejadorCliente {
     private static volatile Path carpetaImagenesCache;
 
     public static void atender(Socket clienteSocket, String id) {
+        atender(clienteSocket, id, System.nanoTime());
+    }
+
+    public static void atender(Socket clienteSocket, String id, long aceptadaNanos) {
 
         String hilo = Thread.currentThread().getName();
         String ipConexion = clienteSocket.getInetAddress().getHostAddress();
@@ -38,7 +45,7 @@ public class ManejadorCliente {
         try {
             SolicitudHttp solicitud;
             try {
-                solicitud = SolicitudHttp.leer(clienteSocket, TIMEOUT_LECTURA_MS);
+                solicitud = SolicitudHttp.leerHasta(clienteSocket, plazoLectura(aceptadaNanos));
             } catch (SolicitudHttp.SolicitudInvalidaException e) {
                 responderSolicitudInvalida(clienteSocket, ip, e, true);
                 return;
@@ -208,6 +215,12 @@ public class ManejadorCliente {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    static long plazoLectura(long aceptadaNanos) {
+        long desdeLlegada = aceptadaNanos + PLAZO_LECTURA_NANOS;
+        long minimo = System.nanoTime() + GRACIA_TRAS_COLA_NANOS;
+        return desdeLlegada - minimo > 0 ? desdeLlegada : minimo;
     }
 
     static void responderSolicitudInvalida(

@@ -56,7 +56,12 @@ public final class SolicitudHttp {
     }
 
     public static SolicitudHttp leer(Socket socket, int timeoutMs) throws IOException {
-        socket.setSoTimeout(timeoutMs);
+        return leerHasta(socket, System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs));
+    }
+
+    public static SolicitudHttp leerHasta(Socket socket, long plazo) throws IOException {
+        long restanteMs = Math.max(1L, TimeUnit.NANOSECONDS.toMillis(plazo - System.nanoTime()));
+        socket.setSoTimeout((int) Math.min(Integer.MAX_VALUE, restanteMs));
 
         BufferedReader entrada = new BufferedReader(
             new InputStreamReader(
@@ -64,8 +69,6 @@ public final class SolicitudHttp {
                 StandardCharsets.ISO_8859_1
             )
         );
-
-        long plazo = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
 
         String linea;
         try {
