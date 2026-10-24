@@ -121,6 +121,16 @@ public final class Rutas {
             || ALBUM_COSANUESTRA.equals(ruta);
     }
 
+    public static String resolverAlias(String ruta) {
+        if ("/favicon.ico".equals(ruta)) {
+            return IMAGENES + "/favicon.ico";
+        }
+        if ("/apple-touch-icon.png".equals(ruta) || "/apple-touch-icon-precomposed.png".equals(ruta)) {
+            return IMAGENES + "/apple-touch-icon.png";
+        }
+        return ruta;
+    }
+
     public static boolean esImagen(String ruta) {
         return ruta != null && ruta.startsWith(IMAGENES + "/");
     }

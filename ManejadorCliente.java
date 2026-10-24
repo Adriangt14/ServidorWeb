@@ -127,7 +127,7 @@ public class ManejadorCliente {
                 return;
             }
 
-            ruta = solicitud.ruta();
+            ruta = Rutas.resolverAlias(solicitud.ruta());
 
             if (Rutas.esRutaProtegida(ruta)) {
                 Estadisticas.registrarEvento(
@@ -525,7 +525,7 @@ public class ManejadorCliente {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
-                <link rel="icon" href="data:,">
+                <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32.png">
                 <title>%s | Nexus UMG</title>
             </head>
             <body>

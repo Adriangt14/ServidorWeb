@@ -636,7 +636,9 @@ public final class AdminHandler {
             <meta name="robots" content="noindex, nofollow">
             <meta name="theme-color" content="#0a0f13">
             {{RECARGA}}
-            <link rel="icon" href="data:,">
+            <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32.png">
+            <link rel="icon" type="image/png" sizes="16x16" href="/imagenes/favicon-16.png">
+            <link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
             <title>{{TITULO}} | Nexus UMG</title>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

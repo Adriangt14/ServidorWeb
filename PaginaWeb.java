@@ -719,7 +719,9 @@ public class PaginaWeb {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <meta name="theme-color" content="#10171d">
-                <link rel="icon" href="data:,">
+                <link rel="icon" type="image/png" sizes="32x32" href="/imagenes/favicon-32.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="/imagenes/favicon-16.png">
+                <link rel="apple-touch-icon" href="/imagenes/apple-touch-icon.png">
 
                 <title>Nexus UMG | Tecnología para otros mundos</title>
 
