@@ -1,14 +1,11 @@
 import java.io.IOException;
 import java.net.Socket;
-import java.net.InetAddress;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -18,11 +15,6 @@ public class ManejadorCliente {
     private static final int TIMEOUT_LECTURA_MS = 5000;
     private static final long MAX_TAMANO_IMAGEN_BYTES = 8L * 1024 * 1024;
     private static final long MAX_CACHE_IMAGENES_BYTES = 32L * 1024 * 1024;
-    private static final Pattern PATRON_IPV4 =
-        Pattern.compile("[0-9]{1,3}(\\.[0-9]{1,3}){3}");
-    private static final Pattern PATRON_PUNTOS = Pattern.compile("\\.");
-    private static final Pattern PATRON_IPV6 =
-        Pattern.compile("[0-9a-fA-F:.]+");
 
     private static final ConcurrentHashMap<Path, byte[]> CACHE_IMAGENES =
         new ConcurrentHashMap<>();
@@ -59,8 +51,17 @@ public class ManejadorCliente {
                 return;
             }
 
-            ip = obtenerIpCliente(clienteSocket, solicitud, ipConexion);
+            OrigenCliente.Origen origen = OrigenCliente.resolver(clienteSocket, solicitud);
+            ip = origen.ip();
             Estadisticas.actualizarIp(id, ip);
+
+            if (origen.tipo() == OrigenCliente.Tipo.CLOUDFLARE_RECHAZADO) {
+                Estadisticas.registrarEvento(
+                    Estadisticas.TipoEvento.ORIGEN_NO_VERIFICADO,
+                    ip,
+                    "CF-Connecting-IP sin cabecera secreta válida"
+                );
+            }
 
             boolean incluirCuerpo = !solicitud.pideSoloCabeceras();
 
@@ -513,58 +514,6 @@ public class ManejadorCliente {
             </body>
             </html>
             """.formatted(escaparHtml(titulo), codigo, escaparHtml(titulo), escaparHtml(mensaje));
-    }
-
-    private static String obtenerIpCliente(
-        Socket socket,
-        SolicitudHttp solicitud,
-        String ipConexion
-    ) {
-        if (!socket.getInetAddress().isLoopbackAddress()) {
-            return ipConexion;
-        }
-
-        String ipCloudflare = solicitud.cabecera("cf-connecting-ip");
-        String ipNormalizada = normalizarIp(ipCloudflare);
-        return ipNormalizada != null ? ipNormalizada : ipConexion;
-    }
-
-    private static String normalizarIp(String candidata) {
-        if (candidata == null || candidata.isBlank() || candidata.length() > 45) {
-            return null;
-        }
-
-        String ip = candidata.trim();
-
-        if (PATRON_IPV4.matcher(ip).matches()) {
-            String[] octetos = PATRON_PUNTOS.split(ip, -1);
-            StringBuilder canonica = new StringBuilder();
-            for (int i = 0; i < octetos.length; i++) {
-                int valor;
-                try {
-                    valor = Integer.parseInt(octetos[i]);
-                } catch (NumberFormatException e) {
-                    return null;
-                }
-                if (valor < 0 || valor > 255) {
-                    return null;
-                }
-                if (i > 0) canonica.append('.');
-                canonica.append(valor);
-            }
-            return canonica.toString();
-        }
-
-        if (ip.indexOf(':') >= 0 && PATRON_IPV6.matcher(ip).matches()) {
-            try {
-                InetAddress direccion = InetAddress.getByName(ip);
-                return direccion.getHostAddress().toLowerCase(Locale.ROOT);
-            } catch (UnknownHostException ignored) {
-                return null;
-            }
-        }
-
-        return null;
     }
 
     private static String escaparHtml(String texto) {

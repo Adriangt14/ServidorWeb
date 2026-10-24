@@ -22,7 +22,8 @@ public class Estadisticas {
         CAPACIDAD_IPS,
         SATURACION,
         RUTA_PROTEGIDA,
-        SOLICITUD_INVALIDA
+        SOLICITUD_INVALIDA,
+        ORIGEN_NO_VERIFICADO
     }
 
     public enum MotivoSinRespuesta {

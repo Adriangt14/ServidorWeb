@@ -12,6 +12,11 @@ public class Servidor {
 
     public static void main(String[] args) {
 
+        if (!OrigenCliente.validarConfiguracion()) {
+            System.exit(1);
+            return;
+        }
+
         GestorHilos gestorHilos =
             new GestorHilos(
                 HILOS,
