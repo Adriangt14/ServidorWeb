@@ -1,14 +1,8 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,23 +10,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class ManejadorCliente {
 
     private static final int TIMEOUT_LECTURA_MS = 5000;
-    private static final int MAX_LINEA_HTTP = 4096;
-    private static final int MAX_CABECERAS_HTTP = 50;
-    private static final int MAX_BYTES_CABECERAS = 16_384;
     private static final long MAX_TAMANO_IMAGEN_BYTES = 8L * 1024 * 1024;
     private static final long MAX_CACHE_IMAGENES_BYTES = 32L * 1024 * 1024;
-    private static final Pattern PATRON_ESPACIOS = Pattern.compile("\\s+");
-    private static final Pattern PATRON_NOMBRE_CABECERA =
-        Pattern.compile("[!#$%&'*+.^_`|~0-9a-z-]+");
     private static final Pattern PATRON_IPV4 =
         Pattern.compile("[0-9]{1,3}(\\.[0-9]{1,3}){3}");
     private static final Pattern PATRON_PUNTOS = Pattern.compile("\\.");
@@ -59,81 +44,25 @@ public class ManejadorCliente {
         Estadisticas.iniciarSolicitud(id);
 
         try {
-            clienteSocket.setSoTimeout(TIMEOUT_LECTURA_MS);
-
-            BufferedReader entrada = new BufferedReader(
-                new InputStreamReader(
-                    clienteSocket.getInputStream(),
-                    StandardCharsets.ISO_8859_1
-                )
-            );
-
-            long plazoLectura = System.nanoTime()
-                + TimeUnit.MILLISECONDS.toNanos(TIMEOUT_LECTURA_MS);
-
-            String peticion;
+            SolicitudHttp solicitud;
             try {
-                peticion = leerLineaLimitada(
-                    entrada,
-                    clienteSocket,
-                    plazoLectura
-                );
-            } catch (LineaDemasiadoLargaException e) {
-                Estadisticas.registrarEvento(
-                    Estadisticas.TipoEvento.SOLICITUD_INVALIDA,
-                    ip,
-                    "414 dirección demasiado larga"
-                );
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 414 URI Too Long",
-                    paginaError(414, "Dirección demasiado larga", "La dirección solicitada supera el tamaño permitido.")
-                );
+                solicitud = SolicitudHttp.leer(clienteSocket, TIMEOUT_LECTURA_MS);
+            } catch (SolicitudHttp.SolicitudInvalidaException e) {
+                responderSolicitudInvalida(clienteSocket, ip, e, true);
                 return;
             }
 
-            if (peticion == null || peticion.isBlank()) {
+            if (solicitud == null) {
                 Estadisticas.registrarSinRespuesta(
                     Estadisticas.MotivoSinRespuesta.CONEXION_VACIA
                 );
                 return;
             }
 
-            Map<String, String> cabeceras;
-            try {
-                cabeceras = leerCabecerasLimitadas(
-                    entrada,
-                    clienteSocket,
-                    plazoLectura
-                );
-            } catch (LineaDemasiadoLargaException | CabecerasDemasiadoGrandesException e) {
-                Estadisticas.registrarEvento(
-                    Estadisticas.TipoEvento.SOLICITUD_INVALIDA,
-                    ip,
-                    "431 cabeceras demasiado grandes"
-                );
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 431 Request Header Fields Too Large",
-                    paginaError(431, "Cabeceras demasiado grandes", "Las cabeceras de la solicitud superan el tamaño permitido.")
-                );
-                return;
-            } catch (CabecerasInvalidasException e) {
-                Estadisticas.registrarEvento(
-                    Estadisticas.TipoEvento.SOLICITUD_INVALIDA,
-                    ip,
-                    "400 " + e.getMessage()
-                );
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 400 Bad Request",
-                    paginaError(400, "Solicitud no válida", e.getMessage())
-                );
-                return;
-            }
-
-            ip = obtenerIpCliente(clienteSocket, cabeceras, ipConexion);
+            ip = obtenerIpCliente(clienteSocket, solicitud, ipConexion);
             Estadisticas.actualizarIp(id, ip);
+
+            boolean incluirCuerpo = !solicitud.pideSoloCabeceras();
 
             LimitadorSolicitudes.Resultado decisionGlobal =
                 LimitadorSolicitudes.comprobarGlobal(ip);
@@ -148,63 +77,41 @@ public class ManejadorCliente {
                 );
                 enviarLimiteSolicitudes(
                     clienteSocket,
-                    decisionGlobal.retryAfterSegundos()
-                );
-                return;
-            }
-
-            String[] partes = PATRON_ESPACIOS.split(peticion.trim());
-
-            if (
-                partes.length != 3 ||
-                !(partes[2].equals("HTTP/1.0") || partes[2].equals("HTTP/1.1"))
-            ) {
-                Estadisticas.registrarEvento(
-                    Estadisticas.TipoEvento.SOLICITUD_INVALIDA,
-                    ip,
-                    "400 línea de petición no válida"
-                );
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 400 Bad Request",
-                    paginaError(400, "Solicitud HTTP no válida", "La petición recibida no tiene el formato esperado.")
-                );
-                return;
-            }
-
-            if (!partes[0].equals("GET")) {
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 405 Method Not Allowed",
-                    paginaError(405, "Método no permitido", "Este servidor solo admite solicitudes GET.")
+                    decisionGlobal.retryAfterSegundos(),
+                    incluirCuerpo
                 );
                 return;
             }
 
             try {
-                URI uri = new URI(partes[1]);
-                ruta = uri.getPath();
-
-                if (ruta == null || !ruta.startsWith("/")) {
-                    ruta = "";
-                }
-
-            } catch (URISyntaxException e) {
-                ruta = "";
-
-                Estadisticas.registrarEvento(
-                    Estadisticas.TipoEvento.SOLICITUD_INVALIDA,
-                    ip,
-                    "400 ruta con formato no válido"
-                );
-
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 400 Bad Request",
-                    paginaError(400, "Ruta no válida", "La ruta solicitada no tiene un formato válido.")
-                );
+                solicitud.interpretarLinea();
+            } catch (SolicitudHttp.SolicitudInvalidaException e) {
+                responderSolicitudInvalida(clienteSocket, ip, e, incluirCuerpo);
                 return;
             }
+
+            String metodo = solicitud.metodo();
+            incluirCuerpo = !metodo.equals("HEAD");
+
+            if (!metodo.equals("GET") && !metodo.equals("HEAD")) {
+                RespuestaHttp.html(
+                    405,
+                    paginaError(405, "Método no permitido", "Este servidor solo admite solicitudes GET y HEAD.")
+                )
+                    .cabecera("Allow", "GET, HEAD")
+                    .escribir(clienteSocket, true);
+                return;
+            }
+
+            try {
+                solicitud.interpretarRuta();
+            } catch (SolicitudHttp.SolicitudInvalidaException e) {
+                ruta = "";
+                responderSolicitudInvalida(clienteSocket, ip, e, incluirCuerpo);
+                return;
+            }
+
+            ruta = solicitud.ruta();
 
             if (Rutas.esRutaProtegida(ruta)) {
                 Estadisticas.registrarEvento(
@@ -213,11 +120,8 @@ public class ManejadorCliente {
                     ruta
                 );
 
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 404 Not Found",
-                    paginaError("Recurso no encontrado.")
-                );
+                RespuestaHttp.html(404, paginaError("Recurso no encontrado."))
+                    .escribir(clienteSocket, incluirCuerpo);
                 return;
             }
 
@@ -237,7 +141,8 @@ public class ManejadorCliente {
                 );
                 enviarLimiteSolicitudes(
                     clienteSocket,
-                    decisionRecurso.retryAfterSegundos()
+                    decisionRecurso.retryAfterSegundos(),
+                    incluirCuerpo
                 );
                 return;
             }
@@ -245,26 +150,18 @@ public class ManejadorCliente {
             Estadisticas.actualizarRuta(id, ruta);
 
             if (esImagen) {
-                enviarImagen(ruta, clienteSocket);
+                enviarImagen(ruta, clienteSocket, incluirCuerpo);
                 return;
             }
 
             if (!Rutas.esPaginaValida(ruta)) {
-                enviarTexto(
-                    clienteSocket,
-                    "HTTP/1.1 404 Not Found",
-                    paginaError("La página solicitada no existe.")
-                );
+                RespuestaHttp.html(404, paginaError("La página solicitada no existe."))
+                    .escribir(clienteSocket, incluirCuerpo);
                 return;
             }
 
-            byte[] pagina = PaginaWeb.generarBytes(ruta, hilo);
-
-            enviarTexto(
-                clienteSocket,
-                "HTTP/1.1 200 OK",
-                pagina
-            );
+            RespuestaHttp.html(200, PaginaWeb.generarBytes(ruta, hilo))
+                .escribir(clienteSocket, incluirCuerpo);
 
         } catch (SocketTimeoutException e) {
             Estadisticas.registrarSinRespuesta(
@@ -304,148 +201,46 @@ public class ManejadorCliente {
         }
     }
 
-    private static String leerLineaLimitada(
-        BufferedReader entrada,
+    private static void responderSolicitudInvalida(
         Socket socket,
-        long limite
+        String ip,
+        SolicitudHttp.SolicitudInvalidaException error,
+        boolean incluirCuerpo
     ) throws IOException {
-
-        StringBuilder linea = new StringBuilder();
-
-        while (true) {
-            long restante = limite - System.nanoTime();
-
-            if (restante <= 0) {
-                throw new SocketTimeoutException(
-                    "Tiempo máximo para recibir la petición excedido."
-                );
-            }
-
-            long timeoutMs =
-                (restante + 999_999L) / 1_000_000L;
-
-            socket.setSoTimeout(
-                (int) Math.max(1L, timeoutMs)
-            );
-
-            int caracter = entrada.read();
-
-            if (System.nanoTime() - limite >= 0) {
-                throw new SocketTimeoutException(
-                    "Tiempo máximo para recibir la petición excedido."
-                );
-            }
-
-            if (caracter == -1) {
-                if (linea.isEmpty()) {
-                    return null;
-                }
-
-                throw new IOException(
-                    "Petición HTTP incompleta."
-                );
-            }
-
-            if (caracter == '\n') {
-                return linea.toString();
-            }
-
-            if (caracter == '\r') {
-                continue;
-            }
-
-            if (linea.length() >= MAX_LINEA_HTTP) {
-                throw new LineaDemasiadoLargaException(
-                    "Línea HTTP demasiado larga."
-                );
-            }
-
-            linea.append((char) caracter);
-        }
-    }
-
-    private static void enviarTexto(
-        Socket socket,
-        String estado,
-        String pagina
-    ) throws IOException {
-        enviarTexto(socket, estado, pagina, 0);
-    }
-
-    private static void enviarTexto(
-        Socket socket,
-        String estado,
-        String pagina,
-        long retryAfterSegundos
-    ) throws IOException {
-        enviarTexto(
-            socket,
-            estado,
-            pagina.getBytes(StandardCharsets.UTF_8),
-            retryAfterSegundos
+        Estadisticas.registrarEvento(
+            Estadisticas.TipoEvento.SOLICITUD_INVALIDA,
+            ip,
+            error.codigo() + " " + error.getMessage()
         );
-    }
 
-    private static void enviarTexto(
-        Socket socket,
-        String estado,
-        byte[] cuerpo
-    ) throws IOException {
-        enviarTexto(socket, estado, cuerpo, 0);
-    }
-
-    private static void enviarTexto(
-        Socket socket,
-        String estado,
-        byte[] cuerpo,
-        long retryAfterSegundos
-    ) throws IOException {
-        String encabezados =
-            estado + "\r\n" +
-            "Content-Type: text/html; charset=UTF-8\r\n" +
-            "Content-Length: " + cuerpo.length + "\r\n" +
-            "X-Content-Type-Options: nosniff\r\n" +
-            "X-Frame-Options: DENY\r\n" +
-            "Referrer-Policy: no-referrer\r\n" +
-            "Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'\r\n" +
-            (retryAfterSegundos > 0 ? "Retry-After: " + retryAfterSegundos + "\r\n" : "") +
-            (retryAfterSegundos > 0 ? "Cache-Control: no-store\r\n" : "") +
-            "Connection: close\r\n\r\n";
-
-        OutputStream salida = socket.getOutputStream();
-        salida.write(encabezados.getBytes(StandardCharsets.UTF_8));
-        salida.write(cuerpo);
-        salida.flush();
-        Estadisticas.registrarRespuesta(codigoDeEstado(estado));
-    }
-
-    private static int codigoDeEstado(String estado) {
-        try {
-            return Integer.parseInt(estado.substring(9, 12));
-        } catch (RuntimeException e) {
-            return 0;
-        }
+        RespuestaHttp.html(
+            error.codigo(),
+            paginaError(error.codigo(), error.titulo(), error.getMessage())
+        ).escribir(socket, incluirCuerpo);
     }
 
     private static void enviarLimiteSolicitudes(
         Socket socket,
-        long retryAfterSegundos
+        long retryAfterSegundos,
+        boolean incluirCuerpo
     ) throws IOException {
-        enviarTexto(
-            socket,
-            "HTTP/1.1 429 Too Many Requests",
+        RespuestaHttp.html(
+            429,
             paginaError(
                 429,
                 "Demasiadas solicitudes",
                 "Se alcanzó el límite temporal de solicitudes. Espera un momento y vuelve a intentarlo."
-            ),
-            retryAfterSegundos
-        );
+            )
+        )
+            .cabecera("Retry-After", Long.toString(Math.max(1L, retryAfterSegundos)))
+            .cabecera("Cache-Control", "no-store")
+            .escribir(socket, incluirCuerpo);
     }
 
     private static void enviarImagen(
         String ruta,
-        Socket socket
+        Socket socket,
+        boolean incluirCuerpo
     ) throws IOException {
 
         String nombre = ruta.substring(
@@ -459,11 +254,8 @@ public class ManejadorCliente {
             nombre.equals(".") ||
             nombre.equals("..")
         ) {
-            enviarTexto(
-                socket,
-                "HTTP/1.1 404 Not Found",
-                paginaError("Imagen no encontrada.")
-            );
+            RespuestaHttp.html(404, paginaError("Imagen no encontrada."))
+                .escribir(socket, incluirCuerpo);
             return;
         }
 
@@ -472,11 +264,10 @@ public class ManejadorCliente {
             carpeta = localizarCarpetaImagenes();
         } catch (IOException e) {
             System.err.println("[IMG] No se pudo localizar la carpeta imagenes: " + e.getMessage());
-            enviarTexto(
-                socket,
-                "HTTP/1.1 500 Internal Server Error",
+            RespuestaHttp.html(
+                500,
                 paginaError(500, "Error de configuración", "El servidor no encuentra la carpeta de imágenes.")
-            );
+            ).escribir(socket, incluirCuerpo);
             return;
         }
 
@@ -497,11 +288,8 @@ public class ManejadorCliente {
                         " | última: " + nombre + " | carpeta: " + carpeta
                     );
                 }
-                enviarTexto(
-                    socket,
-                    "HTTP/1.1 404 Not Found",
-                    paginaError("Imagen no encontrada: " + nombre)
-                );
+                RespuestaHttp.html(404, paginaError("Imagen no encontrada: " + nombre))
+                    .escribir(socket, incluirCuerpo);
                 return;
             }
         }
@@ -509,73 +297,58 @@ public class ManejadorCliente {
         Path archivo = candidato.toRealPath();
 
         if (!archivo.startsWith(carpeta) || !Files.isRegularFile(archivo)) {
-            enviarTexto(
-                socket,
-                "HTTP/1.1 404 Not Found",
-                paginaError("Imagen no encontrada.")
-            );
+            RespuestaHttp.html(404, paginaError("Imagen no encontrada."))
+                .escribir(socket, incluirCuerpo);
             return;
         }
 
         String tipo = tipoContenidoImagen(nombre);
 
         if (tipo == null) {
-            enviarTexto(
-                socket,
-                "HTTP/1.1 415 Unsupported Media Type",
+            RespuestaHttp.html(
+                415,
                 paginaError(
                     415,
                     "Formato de imagen no compatible",
                     "Usa PNG, JPG, JPEG, WEBP, GIF, BMP, AVIF o ICO."
                 )
-            );
+            ).escribir(socket, incluirCuerpo);
             return;
         }
 
         long tamano = Files.size(archivo);
 
         if (tamano <= 0) {
-            enviarTexto(
-                socket,
-                "HTTP/1.1 404 Not Found",
-                paginaError("La imagen está vacía o no se puede leer.")
-            );
+            RespuestaHttp.html(404, paginaError("La imagen está vacía o no se puede leer."))
+                .escribir(socket, incluirCuerpo);
             return;
         }
 
         if (tamano > MAX_TAMANO_IMAGEN_BYTES) {
-            enviarTexto(
-                socket,
-                "HTTP/1.1 413 Content Too Large",
+            RespuestaHttp.html(
+                413,
                 paginaError(
                     413,
                     "Imagen demasiado grande",
                     "El límite de tamaño por imagen es 8 MiB."
                 )
-            );
+            ).escribir(socket, incluirCuerpo);
             return;
         }
 
-        byte[] imagen = obtenerImagenCacheada(archivo, tamano);
-        long tamanoRespuesta = imagen != null ? imagen.length : tamano;
+        RespuestaHttp respuesta = RespuestaHttp.nueva(200).tipo(tipo);
 
-        String encabezados =
-            "HTTP/1.1 200 OK\r\n" +
-            "Content-Type: " + tipo + "\r\n" +
-            "Content-Length: " + tamanoRespuesta + "\r\n" +
-            "X-Content-Type-Options: nosniff\r\n" +
-            "Cache-Control: public, max-age=3600\r\n" +
-            "Connection: close\r\n\r\n";
-
-        OutputStream salida = socket.getOutputStream();
-        salida.write(encabezados.getBytes(StandardCharsets.UTF_8));
+        byte[] imagen = incluirCuerpo ? obtenerImagenCacheada(archivo, tamano) : null;
         if (imagen != null) {
-            salida.write(imagen);
+            respuesta.cuerpo(imagen);
         } else {
-            Files.copy(archivo, salida);
+            respuesta.archivo(archivo, tamano);
         }
-        salida.flush();
-        Estadisticas.registrarRespuesta(200);
+
+        respuesta
+            .cabecera("X-Content-Type-Options", "nosniff")
+            .cabecera("Cache-Control", "public, max-age=3600")
+            .escribir(socket, incluirCuerpo);
     }
 
     private static byte[] obtenerImagenCacheada(Path archivo, long tamanoArchivo)
@@ -742,71 +515,16 @@ public class ManejadorCliente {
             """.formatted(escaparHtml(titulo), codigo, escaparHtml(titulo), escaparHtml(mensaje));
     }
 
-    private static Map<String, String> leerCabecerasLimitadas(
-        BufferedReader entrada,
-        Socket socket,
-        long plazoLectura
-    ) throws IOException {
-
-        Map<String, String> cabeceras = new HashMap<>();
-        int cantidad = 0;
-        int bytesAproximados = 0;
-
-        while (true) {
-            String linea = leerLineaLimitada(entrada, socket, plazoLectura);
-            if (linea == null) {
-                throw new CabecerasInvalidasException("Cabeceras HTTP incompletas.");
-            }
-            if (linea.isEmpty()) {
-                return cabeceras;
-            }
-
-            cantidad++;
-            bytesAproximados += linea.length() + 2;
-            if (cantidad > MAX_CABECERAS_HTTP || bytesAproximados > MAX_BYTES_CABECERAS) {
-                throw new CabecerasDemasiadoGrandesException("La solicitud contiene demasiadas cabeceras.");
-            }
-
-            if (linea.charAt(0) == ' ' || linea.charAt(0) == '\t') {
-                throw new CabecerasInvalidasException("Formato de cabecera HTTP no válido.");
-            }
-
-            int separador = linea.indexOf(':');
-            if (separador <= 0) {
-                throw new CabecerasInvalidasException("Formato de cabecera HTTP no válido.");
-            }
-
-            String nombre = linea.substring(0, separador).trim().toLowerCase(Locale.ROOT);
-            if (!PATRON_NOMBRE_CABECERA.matcher(nombre).matches()) {
-                throw new CabecerasInvalidasException("Nombre de cabecera HTTP no válido.");
-            }
-
-            String valor = linea.substring(separador + 1).trim();
-            for (int i = 0; i < valor.length(); i++) {
-                char c = valor.charAt(i);
-                if ((c < 0x20 && c != '\t') || c == 0x7f) {
-                    throw new CabecerasInvalidasException("Valor de cabecera HTTP no válido.");
-                }
-            }
-
-            if (nombre.equals("cf-connecting-ip") && cabeceras.containsKey(nombre)) {
-                throw new CabecerasInvalidasException("Cabecera CF-Connecting-IP duplicada.");
-            }
-
-            cabeceras.putIfAbsent(nombre, valor);
-        }
-    }
-
     private static String obtenerIpCliente(
         Socket socket,
-        Map<String, String> cabeceras,
+        SolicitudHttp solicitud,
         String ipConexion
     ) {
         if (!socket.getInetAddress().isLoopbackAddress()) {
             return ipConexion;
         }
 
-        String ipCloudflare = cabeceras.get("cf-connecting-ip");
+        String ipCloudflare = solicitud.cabecera("cf-connecting-ip");
         String ipNormalizada = normalizarIp(ipCloudflare);
         return ipNormalizada != null ? ipNormalizada : ipConexion;
     }
@@ -857,29 +575,5 @@ public class ManejadorCliente {
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&#39;");
-    }
-
-    private static final class CabecerasInvalidasException extends IOException {
-        private static final long serialVersionUID = 1L;
-
-        private CabecerasInvalidasException(String mensaje) {
-            super(mensaje);
-        }
-    }
-
-    private static final class CabecerasDemasiadoGrandesException extends IOException {
-        private static final long serialVersionUID = 1L;
-
-        private CabecerasDemasiadoGrandesException(String mensaje) {
-            super(mensaje);
-        }
-    }
-
-    private static final class LineaDemasiadoLargaException extends IOException {
-        private static final long serialVersionUID = 1L;
-
-        private LineaDemasiadoLargaException(String mensaje) {
-            super(mensaje);
-        }
     }
 }
