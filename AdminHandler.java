@@ -392,7 +392,7 @@ public final class AdminHandler {
             .append(escaparHtml(duracion(e.momentoMillis() - e.inicioMillis())))
             .append(" · actualizado ")
             .append(escaparHtml(FORMATO_HORA.format(Instant.ofEpochMilli(e.momentoMillis()))))
-            .append(" · se recarga cada ").append(SEGUNDOS_RECARGA).append(" s</div>");
+            .append("</div>");
         html.append("<div class=\"acciones\"><span class=\"usuario\">Sesión iniciada como <strong>")
             .append(escaparHtml(sesion.usuario())).append("</strong></span>");
         html.append("<a class=\"boton-sec\" href=\"").append(RUTA_PANEL).append("\">Actualizar</a>");
@@ -495,8 +495,6 @@ public final class AdminHandler {
         html.append("</ol></div></aside>");
 
         html.append("</main>");
-        html.append("<footer class=\"pie\">Datos en memoria desde el último arranque; al reiniciar el servidor vuelven a cero. ")
-            .append("Se guardan como máximo los 100 eventos más recientes.</footer>");
         html.append("</div>");
 
         return plantilla("Panel de administración", html.toString(), SEGUNDOS_RECARGA);
@@ -761,9 +759,9 @@ public final class AdminHandler {
                 .app {
                     height: 100vh;
                     display: grid;
-                    grid-template-rows: auto minmax(0, 1fr) auto;
+                    grid-template-rows: auto minmax(0, 1fr);
                     gap: 12px;
-                    padding: 14px 18px 10px;
+                    padding: 14px 18px;
                 }
                 .barra {
                     display: flex;
@@ -885,8 +883,6 @@ public final class AdminHandler {
                 .ev-ip, .ev-det { font-size: 12px; color: var(--suave); overflow-wrap: anywhere; }
                 .ev-det { color: var(--tenue); }
                 .ev-veces { align-self: start; padding: 1px 7px; border: 1px solid var(--borde); color: var(--oro); font-size: 11px; }
-
-                .pie { color: var(--tenue); font-size: 11px; text-align: center; }
 
                 @media (max-width: 1100px), (max-height: 600px) {
                     .app { height: auto; min-height: 100vh; }
