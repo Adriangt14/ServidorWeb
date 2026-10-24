@@ -194,6 +194,18 @@ public final class SolicitudHttp {
         return version;
     }
 
+    public String objetivo() {
+        return objetivo;
+    }
+
+    public String objetivoSinConsulta() {
+        if (objetivo == null) {
+            return null;
+        }
+        int consultaInicio = objetivo.indexOf('?');
+        return consultaInicio >= 0 ? objetivo.substring(0, consultaInicio) : objetivo;
+    }
+
     public String ruta() {
         return ruta;
     }

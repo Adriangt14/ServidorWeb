@@ -94,6 +94,12 @@ public class ManejadorCliente {
             String metodo = solicitud.metodo();
             incluirCuerpo = !metodo.equals("HEAD");
 
+            if (Rutas.esRutaAdmin(solicitud.objetivoSinConsulta())) {
+                ruta = Rutas.ADMIN;
+                AdminHandler.atender(clienteSocket, id, solicitud, origen, incluirCuerpo);
+                return;
+            }
+
             if (!metodo.equals("GET") && !metodo.equals("HEAD")) {
                 RespuestaHttp.html(
                     405,
@@ -202,7 +208,7 @@ public class ManejadorCliente {
         }
     }
 
-    private static void responderSolicitudInvalida(
+    static void responderSolicitudInvalida(
         Socket socket,
         String ip,
         SolicitudHttp.SolicitudInvalidaException error,
@@ -220,7 +226,7 @@ public class ManejadorCliente {
         ).escribir(socket, incluirCuerpo);
     }
 
-    private static void enviarLimiteSolicitudes(
+    static void enviarLimiteSolicitudes(
         Socket socket,
         long retryAfterSegundos,
         boolean incluirCuerpo
@@ -493,7 +499,7 @@ public class ManejadorCliente {
         return paginaError(404, "Página no encontrada", mensaje);
     }
 
-    private static String paginaError(
+    static String paginaError(
         int codigo,
         String titulo,
         String mensaje

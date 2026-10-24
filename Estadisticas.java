@@ -23,7 +23,11 @@ public class Estadisticas {
         SATURACION,
         RUTA_PROTEGIDA,
         SOLICITUD_INVALIDA,
-        ORIGEN_NO_VERIFICADO
+        ORIGEN_NO_VERIFICADO,
+        LOGIN_EXITOSO,
+        LOGIN_FALLIDO,
+        LOGIN_BLOQUEADO,
+        ACCESO_ADMIN_RECHAZADO
     }
 
     public enum MotivoSinRespuesta {

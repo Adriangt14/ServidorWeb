@@ -46,6 +46,10 @@ public final class Rutas {
     public static final String ALBUM_VOZ = "/albumlavozdeoro";
     public static final String ALBUM_COSANUESTRA = "/albumcosanuestra";
 
+    public static final String ADMIN = "/admin";
+    public static final String ADMIN_ENTRAR = "/admin/entrar";
+    public static final String ADMIN_SALIR = "/admin/salir";
+
     public static final String IMAGENES = "/imagenes";
     public static final String BLOQUEADO = "/bloqueado";
     public static final String NO_ENCONTRADO = "/no-encontrado";
@@ -121,6 +125,10 @@ public final class Rutas {
         return ruta != null && ruta.startsWith(IMAGENES + "/");
     }
 
+    public static boolean esRutaAdmin(String ruta) {
+        return ruta != null && (ADMIN.equals(ruta) || ruta.startsWith(ADMIN + "/"));
+    }
+
     public static boolean esPaginaValida(String ruta) {
         return INICIO.equals(ruta)
             || PRODUCTOS.equals(ruta)
@@ -153,6 +161,10 @@ public final class Rutas {
 
         if (esImagen(ruta)) {
             return IMAGENES;
+        }
+
+        if (esRutaAdmin(ruta)) {
+            return ADMIN;
         }
 
         if (esPaginaValida(ruta)) {

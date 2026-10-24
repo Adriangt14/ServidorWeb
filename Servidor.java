@@ -17,6 +17,8 @@ public class Servidor {
             return;
         }
 
+        AdminAuth.inicializar();
+
         GestorHilos gestorHilos =
             new GestorHilos(
                 HILOS,
