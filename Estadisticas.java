@@ -1,7 +1,12 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,6 +14,57 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 public class Estadisticas {
+
+    public enum TipoEvento {
+        LIMITE_GLOBAL,
+        LIMITE_PAGINAS,
+        LIMITE_IMAGENES,
+        CAPACIDAD_IPS,
+        SATURACION,
+        RUTA_PROTEGIDA,
+        SOLICITUD_INVALIDA
+    }
+
+    public enum MotivoSinRespuesta {
+        CONEXION_VACIA,
+        TIEMPO_AGOTADO,
+        ERROR_IO,
+        CANCELADA_AL_CERRAR
+    }
+
+    public record EventoReciente(
+        long primeroMillis,
+        long ultimoMillis,
+        TipoEvento tipo,
+        String ip,
+        String detalle,
+        int repeticiones
+    ) {
+    }
+
+    public record RutaVisitada(String ruta, long total) {
+    }
+
+    public record Instantanea(
+        long inicioMillis,
+        long momentoMillis,
+        long recibidas,
+        long atendidas,
+        long aceptadas,
+        long rechazadasPorCapacidad,
+        long bloqueadasPorLimitador,
+        int activas,
+        int enCola,
+        Map<Integer, Long> respuestasPorCodigo,
+        Map<TipoEvento, Long> eventosPorTipo,
+        Map<MotivoSinRespuesta, Long> sinRespuesta
+    ) {
+    }
+
+    private static final int MAX_EVENTOS_RECIENTES = 100;
+    private static final int MAX_LONGITUD_TEXTO = 120;
+    private static final long VENTANA_AGRUPACION_MILLIS = 10_000;
+    private static final long INICIO_MILLIS = System.currentTimeMillis();
 
     private static final AtomicInteger recibidas = new AtomicInteger();
     private static final AtomicInteger procesadas = new AtomicInteger();
@@ -25,6 +81,18 @@ public class Estadisticas {
 
     private static final ConcurrentHashMap<String, LongAdder> topRutas =
         new ConcurrentHashMap<>();
+
+    private static final ConcurrentHashMap<Integer, LongAdder> respuestasPorCodigo =
+        new ConcurrentHashMap<>();
+
+    private static final EnumMap<TipoEvento, LongAdder> eventosPorTipo =
+        crearContadores(TipoEvento.class);
+
+    private static final EnumMap<MotivoSinRespuesta, LongAdder> sinRespuesta =
+        crearContadores(MotivoSinRespuesta.class);
+
+    private static final ArrayDeque<Evento> eventosRecientes = new ArrayDeque<>();
+    private static final Object BLOQUEO_EVENTOS = new Object();
 
     private static final boolean LOG_DETALLADO = false;
 
@@ -93,6 +161,58 @@ public class Estadisticas {
         solicitudes.remove(id);
     }
 
+    public static void registrarRespuesta(int codigo) {
+        if (codigo < 100 || codigo > 599) {
+            return;
+        }
+
+        respuestasPorCodigo.computeIfAbsent(codigo, clave -> new LongAdder()).increment();
+    }
+
+    public static void registrarSinRespuesta(MotivoSinRespuesta motivo) {
+        if (motivo != null) {
+            sinRespuesta.get(motivo).increment();
+        }
+    }
+
+    public static void registrarEvento(TipoEvento tipo, String ip, String detalle) {
+        if (tipo == null) {
+            return;
+        }
+
+        eventosPorTipo.get(tipo).increment();
+
+        String ipLimpia = limitarTexto(ip == null || ip.isBlank() ? "desconocida" : ip);
+        String detalleLimpio = limitarTexto(detalle == null ? "" : detalle);
+        long ahora = System.currentTimeMillis();
+
+        synchronized (BLOQUEO_EVENTOS) {
+            Iterator<Evento> iterador = eventosRecientes.descendingIterator();
+            while (iterador.hasNext()) {
+                Evento existente = iterador.next();
+                if (ahora - existente.ultimoMillis > VENTANA_AGRUPACION_MILLIS) {
+                    break;
+                }
+                if (
+                    existente.tipo == tipo &&
+                    existente.ip.equals(ipLimpia) &&
+                    existente.detalle.equals(detalleLimpio)
+                ) {
+                    existente.ultimoMillis = ahora;
+                    if (existente.repeticiones < Integer.MAX_VALUE) {
+                        existente.repeticiones++;
+                    }
+                    return;
+                }
+            }
+
+            if (eventosRecientes.size() >= MAX_EVENTOS_RECIENTES) {
+                eventosRecientes.pollFirst();
+            }
+            eventosRecientes.addLast(new Evento(ahora, tipo, ipLimpia, detalleLimpio));
+        }
+    }
+
     public static int getRecibidas() {
         return recibidas.get();
     }
@@ -113,29 +233,96 @@ public class Estadisticas {
         return Math.max(0, enCola.get());
     }
 
-    public static String getTopRutasHtml() {
-        List<Map.Entry<String, LongAdder>> lista =
-            new ArrayList<>(topRutas.entrySet());
+    public static Instantanea instantanea() {
+        Map<Integer, Long> codigos = new TreeMap<>();
+        long aceptadas = 0;
+        for (Map.Entry<Integer, LongAdder> entrada : respuestasPorCodigo.entrySet()) {
+            long valor = entrada.getValue().sum();
+            codigos.put(entrada.getKey(), valor);
+            if (entrada.getKey() >= 200 && entrada.getKey() < 300) {
+                aceptadas += valor;
+            }
+        }
 
-        lista.sort(
-            Comparator.comparingLong(
-                (Map.Entry<String, LongAdder> entrada) -> entrada.getValue().sum()
-            ).reversed()
+        Map<TipoEvento, Long> eventos = new EnumMap<>(TipoEvento.class);
+        for (Map.Entry<TipoEvento, LongAdder> entrada : eventosPorTipo.entrySet()) {
+            eventos.put(entrada.getKey(), entrada.getValue().sum());
+        }
+
+        Map<MotivoSinRespuesta, Long> sin = new EnumMap<>(MotivoSinRespuesta.class);
+        for (Map.Entry<MotivoSinRespuesta, LongAdder> entrada : sinRespuesta.entrySet()) {
+            sin.put(entrada.getKey(), entrada.getValue().sum());
+        }
+
+        long bloqueadas =
+            eventos.get(TipoEvento.LIMITE_GLOBAL) +
+            eventos.get(TipoEvento.LIMITE_PAGINAS) +
+            eventos.get(TipoEvento.LIMITE_IMAGENES) +
+            eventos.get(TipoEvento.CAPACIDAD_IPS);
+
+        return new Instantanea(
+            INICIO_MILLIS,
+            System.currentTimeMillis(),
+            recibidas.get(),
+            procesadas.get(),
+            aceptadas,
+            rechazadas.get(),
+            bloqueadas,
+            getActivas(),
+            getEnCola(),
+            Collections.unmodifiableMap(codigos),
+            Collections.unmodifiableMap(eventos),
+            Collections.unmodifiableMap(sin)
         );
+    }
+
+    public static List<EventoReciente> getEventosRecientes(int maximo) {
+        List<EventoReciente> lista = new ArrayList<>();
+        synchronized (BLOQUEO_EVENTOS) {
+            Iterator<Evento> iterador = eventosRecientes.descendingIterator();
+            while (iterador.hasNext() && lista.size() < maximo) {
+                Evento evento = iterador.next();
+                lista.add(new EventoReciente(
+                    evento.primeroMillis,
+                    evento.ultimoMillis,
+                    evento.tipo,
+                    evento.ip,
+                    evento.detalle,
+                    evento.repeticiones
+                ));
+            }
+        }
+        return lista;
+    }
+
+    public static List<RutaVisitada> getTopRutas(int maximo) {
+        List<RutaVisitada> lista = new ArrayList<>();
+        for (Map.Entry<String, LongAdder> entrada : topRutas.entrySet()) {
+            lista.add(new RutaVisitada(entrada.getKey(), entrada.getValue().sum()));
+        }
+
+        lista.sort(Comparator.comparingLong(RutaVisitada::total).reversed());
+
+        if (lista.size() > maximo) {
+            return new ArrayList<>(lista.subList(0, maximo));
+        }
+        return lista;
+    }
+
+    public static String getTopRutasHtml() {
+        List<RutaVisitada> lista = getTopRutas(10);
 
         StringBuilder html = new StringBuilder();
-        int limite = Math.min(10, lista.size());
 
-        for (int i = 0; i < limite; i++) {
-            Map.Entry<String, LongAdder> entrada = lista.get(i);
+        for (RutaVisitada ruta : lista) {
             html.append("""
                 <div class="ruta-estadistica">
                     <span>%s</span>
                     <strong>%d</strong>
                 </div>
                 """.formatted(
-                    escaparHtml(entrada.getKey()),
-                    entrada.getValue().sum()
+                    escaparHtml(ruta.ruta()),
+                    ruta.total()
                 ));
         }
 
@@ -181,6 +368,23 @@ public class Estadisticas {
         return html.toString();
     }
 
+    private static <E extends Enum<E>> EnumMap<E, LongAdder> crearContadores(Class<E> tipo) {
+        EnumMap<E, LongAdder> mapa = new EnumMap<>(tipo);
+        for (E valor : tipo.getEnumConstants()) {
+            mapa.put(valor, new LongAdder());
+        }
+        return mapa;
+    }
+
+    private static String limitarTexto(String texto) {
+        StringBuilder limpio = new StringBuilder(Math.min(texto.length(), MAX_LONGITUD_TEXTO));
+        for (int i = 0; i < texto.length() && limpio.length() < MAX_LONGITUD_TEXTO; i++) {
+            char c = texto.charAt(i);
+            limpio.append(c < 0x20 || c == 0x7f ? '?' : c);
+        }
+        return limpio.toString();
+    }
+
     private static String escaparHtml(String texto) {
         if (texto == null) {
             return "";
@@ -204,6 +408,23 @@ public class Estadisticas {
             this.id = id;
             this.orden = orden;
             this.ip = ip;
+        }
+    }
+
+    private static final class Evento {
+        final long primeroMillis;
+        final TipoEvento tipo;
+        final String ip;
+        final String detalle;
+        long ultimoMillis;
+        int repeticiones = 1;
+
+        Evento(long ahora, TipoEvento tipo, String ip, String detalle) {
+            this.primeroMillis = ahora;
+            this.ultimoMillis = ahora;
+            this.tipo = tipo;
+            this.ip = ip;
+            this.detalle = detalle;
         }
     }
 }

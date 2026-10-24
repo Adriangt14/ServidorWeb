@@ -719,6 +719,7 @@ public class PaginaWeb {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <meta name="theme-color" content="#10171d">
+                <link rel="icon" href="data:,">
 
                 <title>Nexus UMG | Tecnología para otros mundos</title>
 

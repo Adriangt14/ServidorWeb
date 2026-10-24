@@ -24,13 +24,16 @@ public final class LimitadorSolicitudes {
     private LimitadorSolicitudes() {
     }
 
-    public record Resultado(boolean permitido, long retryAfterSegundos) {
+    public record Resultado(boolean permitido, long retryAfterSegundos, boolean sinCapacidad) {
+        public Resultado(boolean permitido, long retryAfterSegundos) {
+            this(permitido, retryAfterSegundos, false);
+        }
     }
 
     public static Resultado comprobarGlobal(String ip) {
         LimitesCliente cliente = obtenerCliente(ip);
         return cliente == null
-            ? new Resultado(false, 60)
+            ? new Resultado(false, 60, true)
             : cliente.global.consumir();
     }
 
@@ -41,7 +44,7 @@ public final class LimitadorSolicitudes {
     public static Resultado comprobar(String ip, boolean recursoImagen) {
         LimitesCliente cliente = obtenerCliente(ip);
         if (cliente == null) {
-            return new Resultado(false, 60);
+            return new Resultado(false, 60, true);
         }
         return recursoImagen
             ? cliente.imagenes.consumir()

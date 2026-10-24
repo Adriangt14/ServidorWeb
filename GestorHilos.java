@@ -149,6 +149,12 @@ public class GestorHilos {
             );
         }
 
+        Estadisticas.registrarEvento(
+            Estadisticas.TipoEvento.SATURACION,
+            clienteSocket.getInetAddress().getHostAddress(),
+            ""
+        );
+
         try (
             Socket socket = clienteSocket;
             OutputStream salida = socket.getOutputStream()
@@ -156,8 +162,12 @@ public class GestorHilos {
             socket.setTcpNoDelay(true);
             salida.write(RESPUESTA_SATURACION);
             salida.flush();
+            Estadisticas.registrarRespuesta(503);
 
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            Estadisticas.registrarSinRespuesta(
+                Estadisticas.MotivoSinRespuesta.ERROR_IO
+            );
         }
     }
 
@@ -196,6 +206,9 @@ public class GestorHilos {
         private void cancelarPendiente() {
             if (terminada.compareAndSet(false, true)) {
                 Estadisticas.rechazarSolicitud(id);
+                Estadisticas.registrarSinRespuesta(
+                    Estadisticas.MotivoSinRespuesta.CANCELADA_AL_CERRAR
+                );
                 socketsControlados.remove(socket);
 
                 try {
